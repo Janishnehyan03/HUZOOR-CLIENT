@@ -24,29 +24,48 @@ const StudentTable: React.FC = () => {
   const [classes, setClasses] = useState<Class[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("");
-  const [loading, setLoading] = useState(false);
+  const [loadingClasses, setLoadingClasses] = useState(false); // Separate state for classes
+  const [loadingStudents, setLoadingStudents] = useState(false); // Separate state for students
   const [file, setFile] = useState<File | null>(null);
   const [previewStudents, setPreviewStudents] = useState<Student[]>([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  // Fetching classes
   const getClasses = async () => {
     try {
-      setLoading(true);
+      setLoadingClasses(true);
       const { data } = await Axios.get("/class");
       setClasses(data.classes);
-      setLoading(false);
     } catch (error: any) {
-      setLoading(false);
-      console.log(error.response);
+      console.error(error.response);
+    } finally {
+      setLoadingClasses(false); // Always stop loading regardless of success or failure
     }
   };
 
+  // Fetching students
+  const getStudents = async (classId: string) => {
+    try {
+      setLoadingStudents(true);
+      const { data } = await Axios.get(
+        `/student?class=${classId}&sortBy=rollNumber`
+      );
+      setStudents(data.students);
+    } catch (error: any) {
+      console.error(error.response);
+    } finally {
+      setLoadingStudents(false); // Always stop loading regardless of success or failure
+    }
+  };
+
+  // Handle edit click
   const handleEditClick = (student: Student) => {
     setEditingStudent(student);
     setShowEditForm(true);
   };
 
+  // Update the student data in state
   const handleUpdate = (updatedStudent: Student) => {
     setStudents((prevStudents) =>
       prevStudents.map((student) =>
@@ -55,33 +74,19 @@ const StudentTable: React.FC = () => {
     );
   };
 
-  const getStudents = async (classId: string) => {
-    setLoading(true);
-    try {
-      const { data } = await Axios.get(
-        `/student?class=${classId}&sortBy=rollNumber`
-      );
-      setStudents(data.students);
-      setLoading(false);
-    } catch (error: any) {
-      setLoading(false);
-      console.log(error.response);
-    }
-  };
-
+  // Delete a student
   const deleteStudent = async (studentId: string) => {
-    if (window.confirm("Are you sure to delete the student?")) {
+    if (window.confirm("Are you sure you want to delete this student?")) {
       try {
         await Axios.delete(`/student/${studentId}`);
-        getStudents(selectedClass);
+        getStudents(selectedClass); // Refetch the students after deletion
       } catch (error: any) {
-        setLoading(false);
-        console.log(error.response);
+        console.error(error.response);
       }
     }
   };
 
-  // Handling file input and parsing Excel
+  // Handle file input and Excel parsing
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -104,28 +109,20 @@ const StudentTable: React.FC = () => {
     }
   };
 
-  // Show confirmation modal
-
-  // Upload students to server
-  // Handle the upload click
+  // Upload students to the server
   const handleUploadClick = async () => {
     if (!file) return;
-
     setUploading(true);
-
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-      // Sending the file to the backend
       await Axios.post("/student/excel-upload", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-
       setFile(null); // Clear the file input
-      setUploading(false);
       setPreviewStudents([]);
       alert("Data uploaded successfully");
     } catch (error: any) {
@@ -146,8 +143,13 @@ const StudentTable: React.FC = () => {
     }
   }, [selectedClass]);
 
-  if (loading) {
-    return <Loading />;
+  // Loading conditions for different actions
+  if (loadingClasses) {
+    return <Loading message="Loading classes..." />;
+  }
+
+  if (loadingStudents) {
+    return <Loading message="Loading students..." />;
   }
 
   return (

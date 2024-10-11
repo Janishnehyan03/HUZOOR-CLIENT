@@ -26,6 +26,7 @@ import AttendancePage from "./pages/teacher/AttendancePage";
 import EditAttendance from "./pages/teacher/EditAttendance";
 import StudentAttendanceDetails from "./pages/teacher/StudentAttendanceDetails";
 import SubjectAttendance from "./pages/teacher/SubjectAttendance";
+import Downloads from "./pages/admin/Downloads";
 
 function App() {
   const { checkUserLoggedIn } = useAuth();
@@ -42,6 +43,7 @@ function App() {
         <Route path='*' element={<NotFound />} />
         <Route element={<PrivateRoutes />}>
           <Route path="/" element={<Home />} />
+          <Route path="/downloads" element={<Downloads />} />
           <Route path="/manage-classes" element={<ManageClasses />} />
           <Route path="/teachers" element={<Teachers />} />
           <Route path="/teacher/:teacherId" element={<TeacherProfile />} />
