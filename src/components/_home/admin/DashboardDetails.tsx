@@ -1,37 +1,13 @@
 import { BookOpen, Users } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import Axios from "../../../Axios";
-import Loading from "../../Loading";
-
-interface Details {
-  totalStudents: number;
-  totalTeachers: number;
-  totalSubjects: number;
-}
+import React from "react";
+import { useDashboardData } from "../../../contexts/dashboardContext";
 
 const DashboardDetails: React.FC = () => {
-  const [details, setDetails] = useState<Details | null>(null);
-
-  useEffect(() => {
-    const getData = async () => {
-      try {
-        const { data } = await Axios.get("/details");
-        setDetails(data);
-      } catch (error: any) {
-        console.error(error.response);
-      }
-    };
-
-    getData();
-  }, []);
-
-  if (!details) {
-    return <Loading />;
-  }
+  const details = useDashboardData();
 
   const Card: React.FC<{
     title: string;
-    value: number;
+    value: any;
     icon: React.ReactNode;
   }> = ({ title, value, icon }) => (
     <div className="bg-white shadow-lg rounded-lg p-6 flex items-center">
@@ -49,19 +25,19 @@ const DashboardDetails: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card
           title="Total Students"
-          value={details.totalStudents}
+          value={details?.totalStudents}
           icon={<Users className="h-12 w-12 text-primary" />}
         />
- 
-  
+
         <Card
           title="Total Teachers"
-          value={details.totalTeachers-1}
+          value={details?.totalTeachers ? details?.totalTeachers - 1 : ""}
           icon={<Users className="h-12 w-12 text-purple-500" />}
         />
+
         <Card
           title="Total Subjects"
-          value={details.totalSubjects}
+          value={details?.totalSubjects}
           icon={<BookOpen className="h-12 w-12 text-red-500" />}
         />
       </div>

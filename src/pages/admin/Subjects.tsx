@@ -1,10 +1,10 @@
+import { Settings } from "lucide-react";
 import { useEffect, useState } from "react";
-import Axios from "../../Axios";
-import AddSubjectForm from "./AddSubject";
-import Loading from "../../components/Loading";
 import { Link } from "react-router-dom";
-import { Settings, UploadCloud } from "lucide-react";
 import * as XLSX from "xlsx";
+import Axios from "../../Axios";
+import Loading from "../../components/Loading";
+import AddSubjectForm from "./AddSubject";
 
 function Subjects() {
   const [subjects, setSubjects] = useState<any>([]);

@@ -3,12 +3,10 @@ import { Edit2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Axios from "../../../Axios";
-import Loading from "../../Loading";
 import { useAuth } from "../../../contexts/userContext";
 
 function TeacherCards() {
   const currentDay = dayjs().format("dddd"); // Get the current day of the week
-  const [loading, setLoading] = useState(false);
   const [currentSubject, setCurrentSubject] = useState<any>();
   const [subjectsNotToday, setSubjectsNotToday] = useState<any[]>([]);
   const [subjectsToday, setSubjectsToday] = useState<any[]>([]);
@@ -18,7 +16,6 @@ function TeacherCards() {
 
   const getMyPeriods = async () => {
     try {
-      setLoading(true);
       const { data } = await Axios.get("/subject/get/periods");
       setSubjectsNotToday(data.subjectsNotToday);
       setCurrentSubject(data.currentPeriod);
@@ -31,9 +28,7 @@ function TeacherCards() {
       setSubjectsToday(filteredSubjectsToday);
     } catch (error: any) {
       console.log(error.response);
-    } finally {
-      setLoading(false);
-    }
+    } 
   };
 
   function tConvert(time: any) {
@@ -58,9 +53,7 @@ function TeacherCards() {
     }
   }, []);
 
-  if (loading) {
-    return <Loading />;
-  }
+
   return (
     <section className="px-4 mt-16 text-lg md:px-20">
       {currentSubject && (

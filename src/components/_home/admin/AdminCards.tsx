@@ -1,4 +1,4 @@
-import { Book, Building, PenLineIcon, User, UserCog } from "lucide-react";
+import { Book, Building, DownloadCloud, PenLineIcon, User, UserCog } from "lucide-react";
 import { Link } from "react-router-dom";
 import DashboardDetails from "./DashboardDetails";
 
@@ -49,6 +49,15 @@ function AdminCards() {
             <PenLineIcon className="w-24 h-24" />
             <button className="bg-white text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition duration-300">
               Manage Attendance
+            </button>
+          </div>
+        </Link>
+        <Link to={"/downloads"}>
+          <div className="h-80 w-80 bg-primary rounded-2xl text-white text-center flex items-center flex-col justify-center gap-4 shadow-lg">
+            <p className="text-2xl font-semibold">Downloads</p>
+            <DownloadCloud className="w-24 h-24" />
+            <button className="bg-white text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition duration-300">
+              Go To Downloads
             </button>
           </div>
         </Link>
