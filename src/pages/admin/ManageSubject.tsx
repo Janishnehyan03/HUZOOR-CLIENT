@@ -1,8 +1,8 @@
+import { XCircleIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import Axios from "../../Axios";
-import { Trash, XCircleIcon } from "lucide-react";
 import Loading from "../../components/Loading";
 
 function ManageSubject() {
@@ -126,19 +126,6 @@ function ManageSubject() {
     ));
   };
 
-  const removeFromTeacher = async (subjectId: string) => {
-    try {
-      if (window.confirm("Do you want to delet this subject")) {
-        await Axios.post(`/subject/remove-teacher/${subjectId}`);
-        toast.success("subject removed");
-        navigate("/subjects");
-      }
-    } catch (error: any) {
-      console.log(error.response);
-
-      toast.error("something went wrong");
-    }
-  };
   const handleRemove = async (studentId: string) => {
     try {
       if (window.confirm("Do you want to remove this student")) {
@@ -161,15 +148,6 @@ function ManageSubject() {
   }
   return (
     <div className="max-w-4xl mx-auto p-6 ">
-      <button
-        onClick={() => removeFromTeacher(subject._id)}
-        className="text-red-700 px-3 py-1 flex float-right"
-      >
-        <Trash /> {"  "} Delete Subject From{"   "}
-        <span className="text-gray-400 font-bold">
-          {subject?.teacher?.name}
-        </span>{" "}
-      </button>
       {subject && (
         <div>
           <h1 className="text-3xl font-bold mb-4">{subject?.name}</h1>

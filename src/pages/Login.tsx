@@ -15,7 +15,7 @@ export default function Login() {
     try {
       // Send POST request to login endpoint
       const response = await Axios.post("/teacher/login", {
-        name,
+        serialNumber: name,
         password,
       });
 
@@ -52,7 +52,7 @@ export default function Login() {
         />
         <h1 className="text-xl md:text-2xl text-center text-teal-700 font-bold leading-8 mb-4 md:mb-6">
           <span className="font-semibold text-gray-700">Login to</span> <br />
-          HUZOOR  PORTAL
+          HUZOOR PORTAL
         </h1>
         <input
           type="text"
