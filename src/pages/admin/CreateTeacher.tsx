@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Axios from "../../Axios";
+import toast from "react-hot-toast";
 
 // Define the types for props
 interface CreateTeacherProps {
@@ -48,18 +49,20 @@ const CreateTeacher: React.FC<CreateTeacherProps> = ({
       if (selectedTeacher) {
         // If there's a selected teacher, update the teacher
         await Axios.patch(`/teacher/${selectedTeacher._id}`, formData);
+        toast.success("Teacher Edited");
       } else {
         // If creating a new teacher
         await Axios.post("/teacher", formData);
+        toast.success("Teacher Created");
       }
       refreshTeachers(); // Refresh the teacher list
       setIsOpen(false); // Close the modal
     } catch (error) {
       console.error(error);
-      alert("Failed to save teacher.");
+      toast.error("Something went wrong");
     }
   };
-
+ 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center">
       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
@@ -91,7 +94,7 @@ const CreateTeacher: React.FC<CreateTeacherProps> = ({
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
             />
           </div>
-          
+
           <div className="flex justify-end space-x-2">
             <button
               type="submit"
