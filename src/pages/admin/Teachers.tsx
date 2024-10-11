@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Axios from "../../Axios";
 import Loading from "../../components/Loading";
 import { Link } from "react-router-dom";
 import { User } from "lucide-react";
 import CreateTeacher from "./CreateTeacher";
 import * as XLSX from "xlsx"; // For reading Excel files
+import toast from "react-hot-toast";
 
 function Teachers() {
   const [teachers, setTeachers] = useState([]);
@@ -80,6 +81,21 @@ function Teachers() {
     setSelectedTeacher(teacher); // Set the selected teacher to edit
     setIsOpen(true); // Open the CreateTeacher modal
   };
+  const handleDelete = async (e: any, teacherId: string) => {
+    e.preventDefault();
+
+    if (window.confirm("Do you want to delete this teacher")) {
+      try {
+        await Axios.delete(`/teacher/${teacherId}`);
+        getTeachers(); // Refresh the teacher list
+        setIsOpen(false); // Close the modal
+        toast.success("Teacher Deleted");
+      } catch (error) {
+        console.error(error);
+        toast.error("Something went wrong");
+      }
+    }
+  };
 
   return (
     <div className="container mx-auto mt-10 p-6 bg-teal-50 rounded-lg shadow-xl">
@@ -125,27 +141,72 @@ function Teachers() {
             <table className="min-w-full divide-y divide-teal-300">
               <thead className="bg-teal-100">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider">#</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider">Image</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider">Name</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider">Serial Number</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider">Profile</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider">Edit</th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider"
+                  >
+                    #
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider"
+                  >
+                    Image
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider"
+                  >
+                    Name
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider"
+                  >
+                    Serial Number
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider"
+                  >
+                    Edit
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider"
+                  >
+                    Delete
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider"
+                  >
+                    Profile
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-teal-200">
                 {teachers.map((teacher: any, index) => (
                   <tr key={teacher._id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-teal-800">{index + 1}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-teal-800">
+                      {index + 1}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-teal-800">
                       {teacher?.profileImage ? (
-                        <img src={teacher?.profileImage} className="h-16 w-16 object-cover rounded-full" />
+                        <img
+                          src={teacher?.profileImage}
+                          className="h-16 w-16 object-cover rounded-full"
+                        />
                       ) : (
                         <User className="h-16 w-16 text-teal-500" />
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-teal-800">{teacher.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-teal-800">{teacher?.serialNumber}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-teal-800">
+                      {teacher.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-teal-800">
+                      {teacher?.serialNumber}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-teal-800">
                       <button
                         onClick={() => handleEdit(teacher)} // Open the edit modal
@@ -155,7 +216,18 @@ function Teachers() {
                       </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-teal-800">
-                      <Link to={`/teacher/${teacher._id}`} className="text-teal-500 hover:text-teal-700 font-semibold">
+                      <button
+                        onClick={(e) => handleDelete(e, teacher._id)} // Open the edit modal
+                        className="bg-red-600 text-white px-4 py-2 font-semibold rounded-md hover:bg-red-500"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-teal-800">
+                      <Link
+                        to={`/teacher/${teacher._id}`}
+                        className="text-teal-500 hover:text-teal-700 font-semibold"
+                      >
                         View Profile
                       </Link>
                     </td>
@@ -176,7 +248,10 @@ function Teachers() {
                       <thead className="bg-gray-100">
                         <tr>
                           {Object.keys(excelData[0]).map((key) => (
-                            <th key={key} className="px-4 py-2 text-left font-medium text-gray-700">
+                            <th
+                              key={key}
+                              className="px-4 py-2 text-left font-medium text-gray-700"
+                            >
                               {key}
                             </th>
                           ))}
@@ -186,7 +261,10 @@ function Teachers() {
                         {excelData.map((row, index) => (
                           <tr key={index}>
                             {Object.values(row).map((val: any, i) => (
-                              <td key={i} className="px-4 py-2 text-gray-900 whitespace-nowrap">
+                              <td
+                                key={i}
+                                className="px-4 py-2 text-gray-900 whitespace-nowrap"
+                              >
                                 {val}
                               </td>
                             ))}
@@ -200,8 +278,18 @@ function Teachers() {
                 </div>
 
                 <div className="flex justify-end space-x-2 mt-4">
-                  <button onClick={handleUpload} className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-500">Upload</button>
-                  <button onClick={() => setShowModal(false)} className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200">Close</button>
+                  <button
+                    onClick={handleUpload}
+                    className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-500"
+                  >
+                    Upload
+                  </button>
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200"
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
             </div>
