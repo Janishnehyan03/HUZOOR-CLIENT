@@ -258,7 +258,7 @@ function Subjects() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-start">
                             <Link
-                              to={`/admin/subject/${subject._id}`}
+                              to={`/subject/${subject._id}`}
                               className="text-teal-500 hover:underline"
                             >
                               <Settings className="inline-block mr-1" />
