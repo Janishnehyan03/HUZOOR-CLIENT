@@ -12,10 +12,10 @@ export default function Footer() {
       <div className="flex flex-col items-center text-center gap-5">
         <div className="flex flex-col gap-2 items-center">
           <h1 className="font-bold text-2xl md:text-3xl text-white">
-            HUZOOR APP
+            SHUHOOD APP
           </h1>
           <p className="opacity-80 md:pr-10">
-            HUZOOR APP is an attendance software made for managing students'
+            SHUHOOD APP is an attendance software made for managing students'
             attendance and check daily updates.
           </p>
           <p className="opacity-80 md:pr-10">Have a nice day❤️</p>
@@ -24,7 +24,9 @@ export default function Footer() {
 
       <div className="flex items-center justify-center w-full mt-10 mb-10 md:mb-0">
         <p className="inline-flex items-center justify-center gap-1 flex-wrap">
-          &copy; Copyright 2024 | HUZOOR  | Made with{" "}
+          &copy; Copyright {
+            new Date().getFullYear()
+          } | SHUHOOD  | Made with{" "}
           <Heart className="text-teal-500" />
           <Link
             to="https://digitiostack.vercel.app/"

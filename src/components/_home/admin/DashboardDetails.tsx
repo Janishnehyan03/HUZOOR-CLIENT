@@ -4,6 +4,7 @@ import { useDashboardData } from "../../../contexts/dashboardContext";
 
 const DashboardDetails: React.FC = () => {
   const details = useDashboardData();
+  console.log(details);
 
   const Card: React.FC<{
     title: string;
@@ -33,6 +34,16 @@ const DashboardDetails: React.FC = () => {
           title="Total Teachers"
           value={details?.totalTeachers ? details?.totalTeachers - 1 : ""}
           icon={<Users className="h-12 w-12 text-purple-500" />}
+        />
+        <Card
+          title="Malayalam Students"
+          value={details?.malayalamStudents ? details?.malayalamStudents - 1 : ""}
+          icon={<Users className="h-12 w-12 text-green-500" />}
+        />
+        <Card
+          title="Urdu Teachers"
+          value={details?.urduStudents ? details?.urduStudents - 1 : ""}
+          icon={<Users className="h-12 w-12 text-orange-500" />}
         />
 
         <Card

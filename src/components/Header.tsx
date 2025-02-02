@@ -42,7 +42,7 @@ const Header = () => {
         <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full">
           <img src="/logo.png" alt="Darul Huda Logo" className="h-10" />
           <h1 className="font-bold text-gray-600 font-lato hover:text-gray-950 ">
-            HUZOOR
+            SHUHOOD
           </h1>
         </div>
       </Link>

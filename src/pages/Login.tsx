@@ -52,7 +52,7 @@ export default function Login() {
         />
         <h1 className="text-xl md:text-2xl text-center text-teal-700 font-bold leading-8 mb-4 md:mb-6">
           <span className="font-semibold text-gray-700">Login to</span> <br />
-          HUZOOR PORTAL
+          SHUHOOD PORTAL
         </h1>
         <input
           type="text"
