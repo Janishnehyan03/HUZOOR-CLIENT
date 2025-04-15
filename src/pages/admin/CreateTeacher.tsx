@@ -62,52 +62,79 @@ const CreateTeacher: React.FC<CreateTeacherProps> = ({
       toast.error("Something went wrong");
     }
   };
- 
+
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-        <form onSubmit={handleSubmit}>
-          <h2 className="text-xl font-semibold mb-4 text-teal-600">
-            {selectedTeacher ? "Edit Teacher" : "Create Teacher"}
-          </h2>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Name:
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <input
-              type="text"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-            />
+    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md border border-gray-100">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-gray-800">
+              {selectedTeacher ? "Edit Teacher" : "Create Teacher"}
+            </h2>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
           </div>
 
-          <div className="flex justify-end space-x-2">
-            <button
-              type="submit"
-              className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-500"
-            >
-              Save
-            </button>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">
+                Name
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all outline-none"
+                placeholder="Enter teacher's name"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">
+                Password
+              </label>
+              <input
+                type="text"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all outline-none"
+                placeholder="Enter password"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-2">
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200"
+              className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors font-medium"
             >
               Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors font-medium shadow-sm"
+            >
+              {selectedTeacher ? "Update" : "Create"}
             </button>
           </div>
         </form>
