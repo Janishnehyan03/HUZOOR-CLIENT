@@ -34,62 +34,63 @@ const ManageClasses = () => {
   };
 
   return (
-    <div className="p-4 bg-green-50 min-h-screen">
+    <div className="min-h-screen p-6">
       {isOpen && <CreateClass setIsOpen={setIsOpen} />}
       {isOpenEdit && selectedClass && (
         <EditClass setIsOpen={setIsOpenEdit} selectedClass={selectedClass} />
       )}
 
-      <div className="bg-green-100 h-screen m-3 p-4 rounded-2xl">
-        <div className="flex justify-around items-center">
-          <h1 className="text-3xl font-bold mb-5 text-center text-green-800">
-            Manage Classes
-          </h1>
-
+      <div className="bg-white border border-indigo-100 shadow-lg rounded-3xl p-6 max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+          <h1 className="text-3xl font-bold text-indigo-800">Manage Classes</h1>
           <button
             onClick={() => setIsOpen(true)}
-            className="bg-primary text-white px-2 py-1 font-semibold border border-primary hover:bg-transparent hover:text-primary"
+            className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-medium border border-indigo-600 hover:bg-transparent hover:text-indigo-600 transition-all duration-200"
           >
-            Create Class
+            + Create Class
           </button>
         </div>
 
-        {classes.length > 0 && (
-          <div className="overflow-x-auto max-w-2xl mx-auto mt-3">
-            <table className="min-w-full bg-white shadow rounded-lg">
-              <thead>
-                <tr className="bg-green-200">
-                  <th className="py-2 px-4 border-b">Class Name</th>
-                  <th className="py-2 px-4 border-b">Serial Number</th>
-                  <th className="py-2 px-4 border-b">Edit</th>
-                  <th className="py-2 px-4 border-b">Delete</th>
+        {/* Table */}
+        {classes.length > 0 ? (
+          <div className="overflow-x-auto mt-8 rounded-xl shadow-sm">
+            <table className="min-w-full bg-white text-left border border-indigo-100">
+              <thead className="bg-indigo-100 text-indigo-800 text-sm font-semibold">
+                <tr>
+                  <th className="py-3 px-6">Class Name</th>
+                  <th className="py-3 px-6">Serial Number</th>
+                  <th className="py-3 px-6">Edit</th>
+                  <th className="py-3 px-6">Delete</th>
                 </tr>
               </thead>
               <tbody>
                 {classes.map((classItem, index) => (
                   <tr
-                    key={classItem._id} // Use _id as the key
-                    className={index % 2 === 0 ? "bg-gray-50" : "bg-gray-200"}
+                    key={classItem._id}
+                    className={`${
+                      index % 2 === 0 ? "bg-indigo-50" : "bg-white"
+                    } hover:bg-indigo-100/50 transition`}
                   >
-                    <td className="py-2 px-4 border-b">{classItem.name}</td>
-                    <td className="py-2 px-4 border-b">
+                    <td className="py-3 px-6 text-sm">{classItem.name}</td>
+                    <td className="py-3 px-6 text-sm">
                       {classItem.serialNumber}
                     </td>
-                    <td className="py-2 px-4 border-b">
+                    <td className="py-3 px-6">
                       <button
                         onClick={() => {
                           setSelectedClass(classItem._id);
                           setIsOpenEdit(true);
                         }}
-                        className="bg-primary text-white px-2 py-1 border border-primary"
+                        className="bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-sm border border-indigo-500 hover:bg-transparent hover:text-indigo-500 transition-all"
                       >
                         Edit
                       </button>
                     </td>
-                    <td className="py-2 px-4 border-b">
+                    <td className="py-3 px-6">
                       <button
-                        onClick={() => handleDelete(classItem._id)} // Call delete function
-                        className="bg-red-500 text-white px-2 py-1 border border-red-500 hover:bg-red-600"
+                        onClick={() => handleDelete(classItem._id)}
+                        className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm border border-red-500 hover:bg-transparent hover:text-red-500 transition-all"
                       >
                         Delete
                       </button>
@@ -98,6 +99,10 @@ const ManageClasses = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        ) : (
+          <div className="text-center mt-10 text-gray-500 text-lg">
+            No classes available yet. Click "Create Class" to get started.
           </div>
         )}
       </div>

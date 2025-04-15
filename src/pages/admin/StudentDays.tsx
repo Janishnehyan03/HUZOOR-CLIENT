@@ -79,103 +79,117 @@ const StudentDays = () => {
     return <Loading />;
   }
   return (
-    <div className="container mx-auto p-4">
-      {error && <p className="text-red-500 mt-4">{error}</p>}
-      <div className="text-center">
-        <h1 className=" font-semibold text-gray-700 text-3xl">
-          {student?.name}
-        </h1>
-        <h3 className=" text-gray-700 text-xl">{student?.admissionNumber}</h3>
+    <div className="max-w-7xl mx-auto p-6">
+      {error && (
+        <p className="text-red-600 text-sm mb-4 text-center">{error}</p>
+      )}
+
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">{student?.name}</h1>
+        <h3 className="text-lg text-gray-500">{student?.admissionNumber}</h3>
       </div>
-      <div className="mt-8">
-        {attendanceDetails && attendanceDetails.student && (
-          <div className="border p-4 mb-4">
-            <h2 className="text-2xl font-bold mb-4">Student Information</h2>
+
+      {attendanceDetails?.student && (
+        <div className="bg-white shadow-sm rounded-2xl p-6 mb-6 border">
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">
+            Student Information
+          </h2>
+          <div className="space-y-1 text-gray-600 text-sm">
             <p>
-              <strong>Student Name:</strong> {attendanceDetails.student.name}
+              <span className="font-medium text-gray-700">Name:</span>{" "}
+              {attendanceDetails.student.name}
             </p>
             <p>
-              <strong>Admission Number:</strong>{" "}
+              <span className="font-medium text-gray-700">Admission No:</span>{" "}
               {attendanceDetails.student.admissionNumber}
             </p>
             <p>
-              <strong>Class:</strong> {attendanceDetails.student.class}
+              <span className="font-medium text-gray-700">Class:</span>{" "}
+              {attendanceDetails.student.class}
             </p>
           </div>
-        )}
-
-        <div>
-          <div className="lg:grid lg:grid-cols-2 gap-2">
-            {attendanceDetails?.statistics.map(
-              (subject: Subject, index: number) => (
-                <div key={index} className="border bg-gray-50 p-4 rounded-3xl">
-                  <h3 className="text-lg font-bold mb-2">
-                    {subject.subjectName}
-                  </h3>
-                  {Object.entries(groupByMonth(subject.attendanceRecords)).map(
-                    ([month, records]) => (
-                      <div key={month} className="mb-4">
-                        <h4 className="text-md font-semibold mb-2">{month}</h4>
-                        <div className="flex flex-wrap">
-                          {(records as AttendanceRecord[]).map(
-                            (record: AttendanceRecord, i: number) => {
-                              const bgColor =
-                                record.status === "Present"
-                                  ? "bg-green-500"
-                                  : "bg-red-500";
-                              return (
-                                <div
-                                  key={i}
-                                  className={`w-8 h-8 flex items-center justify-center m-1 ${bgColor} text-white`}
-                                >
-                                  {dayjs(record.date).date()}
-                                </div>
-                              );
-                            }
-                          )}
-                        </div>
-                      </div>
-                    )
-                  )}
-
-                  <div className="mt-2">
-                    <p>
-                      <strong>Total Attendance:</strong>{" "}
-                      {subject.attendanceRecords.length}
-                    </p>
-                    <p>
-                      <strong>Total Present:</strong>{" "}
-                      {
-                        subject.attendanceRecords.filter(
-                          (record: any) => record.status === "Present"
-                        ).length
-                      }
-                    </p>
-                    <p>
-                      <strong>Total Absent:</strong>{" "}
-                      {
-                        subject.attendanceRecords.filter(
-                          (record: any) => record.status === "Absent"
-                        ).length
-                      }
-                    </p>
-                    <p>
-                      <strong>Attendance Percentage:</strong>{" "}
-                      {(
-                        (subject.attendanceRecords.filter(
-                          (record: any) => record.status === "Present"
-                        ).length /
-                          subject.attendanceRecords.length) *
-                        100
-                      ).toFixed(2)}
-                      %
-                    </p>
-                  </div>
-                </div>
-              )
-            )}
-          </div>
         </div>
+      )}
+
+      <div className="grid lg:grid-cols-2 gap-6">
+        {attendanceDetails?.statistics.map(
+          (subject: Subject, index: number) => (
+            <div
+              key={index}
+              className="bg-white border p-5 rounded-2xl shadow-sm"
+            >
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                {subject.subjectName}
+              </h3>
+
+              {Object.entries(groupByMonth(subject.attendanceRecords)).map(
+                ([month, records]) => (
+                  <div key={month} className="mb-5">
+                    <h4 className="text-sm font-medium text-gray-600 mb-2">
+                      {month}
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {(records as AttendanceRecord[]).map((record, i) => {
+                        const isPresent = record.status === "Present";
+                        const bgColor = isPresent
+                          ? "bg-green-500"
+                          : "bg-red-500";
+                        return (
+                          <div
+                            key={i}
+                            className={`w-8 h-8 rounded-md flex items-center justify-center text-white text-xs font-medium ${bgColor}`}
+                          >
+                            {dayjs(record.date).date()}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )
+              )}
+
+              <div className="text-sm text-gray-600 mt-4 space-y-1">
+                <p>
+                  <span className="font-medium text-gray-700">
+                    Total Attendance:
+                  </span>{" "}
+                  {subject.attendanceRecords.length}
+                </p>
+                <p>
+                  <span className="font-medium text-gray-700">
+                    Total Present:
+                  </span>{" "}
+                  {
+                    subject.attendanceRecords.filter(
+                      (r) => r.status === "Present"
+                    ).length
+                  }
+                </p>
+                <p>
+                  <span className="font-medium text-gray-700">
+                    Total Absent:
+                  </span>{" "}
+                  {
+                    subject.attendanceRecords.filter(
+                      (r) => r.status === "Absent"
+                    ).length
+                  }
+                </p>
+                <p>
+                  <span className="font-medium text-gray-700">Percentage:</span>{" "}
+                  {(
+                    (subject.attendanceRecords.filter(
+                      (r) => r.status === "Present"
+                    ).length /
+                      subject.attendanceRecords.length) *
+                    100
+                  ).toFixed(2)}
+                  %
+                </p>
+              </div>
+            </div>
+          )
+        )}
       </div>
     </div>
   );

@@ -110,71 +110,99 @@ function AttendancePage() {
   }, [subjectId]);
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen bg-gray-50 py-8">
       {loading ? (
-        <Loading />
+        <div className="flex items-center justify-center h-64">
+          <Loading />
+        </div>
       ) : (
-        <div className="max-w-3xl mx-auto px-4">
-          <div className="bg-gray-900 p-6 rounded-lg shadow-md">
-            <h1 className="text-3xl font-bold text-gray-300 mb-4">
-              <span className="text-gray-400">Subject:</span>{" "}
-              {subject?.name || "Loading..."}
-            </h1>
-            <h2 className="text-2xl font-semibold text-blue-900 mb-6">
-              <span className="text-gray-400">Class:</span>{" "}
-              {subject?.class?.name || ""}
-            </h2>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Subject Header Card */}
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+            <div className="p-6 sm:p-8 bg-gradient-to-r from-blue-800 to-blue-600">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                <span className="text-blue-200">Subject:</span>{" "}
+                {subject?.name || "Loading..."}
+              </h1>
+              <h2 className="text-xl sm:text-2xl font-medium text-blue-100">
+                <span className="text-blue-200">Class:</span>{" "}
+                {subject?.class?.name || ""}
+              </h2>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="p-4 sm:p-6 flex flex-wrap gap-3">
+              <Link
+                to={`/subject-attendance/${subject?._id}`}
+                className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-full shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Attendance Report
+              </Link>
+              <Link
+                to={`/edit-attendance/${subject?._id}`}
+                className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-full shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
+              >
+                <Pen className="w-4 h-4 mr-2" />
+                Edit Attendance
+              </Link>
+            </div>
           </div>
-          <div className="flex lg:space-x-3 space-x-1">
-            <Link to={`/subject-attendance/${subject?._id}`}>
-              <button className="my-3 lg:w-full w-sm  bg-gray-200 text-gray-900 px-3 py-2 rounded-full flex items-center text-sm">
-                <Download className="mr-2" /> <p>Attendance Report </p>
-              </button>
-            </Link>
-            <Link to={`/edit-attendance/${subject?._id}`}>
-              <button className="my-3 lg:w-full w-sm bg-gray-200 text-gray-900 px-3 py-2 rounded-full flex items-center text-sm">
-                <Pen className="mr-2" /> <p>Edit Attendance</p>
-              </button>
-            </Link>
-          </div>
+
+          {/* Attendance Content */}
           {attendancesData.length > 0 &&
           attendances[0]?.subject?.toString() === subjectId ? (
-            <>
+            <div className="space-y-8">
+              <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                Marked Attendances
+              </h3>
               <MarkedAttendaces attendances={attendancesData} />
-              <div className="lg:flex items-center justify-start mt-3 space-x-3">
-                <Link to={`/edit-attendance/${subjectId}`}>
-                  <div className="flex items-center rounded-full max-w-xl bg-teal-700 p-3 text-white ">
-                    <PenIcon size={20} />
-                    <h1 className="text-center ml-2">Edit Attendance</h1>
-                  </div>
-                </Link>
               </div>
-            </>
+              <div className="flex justify-end">
+              <Link
+                to={`/edit-attendance/${subjectId}`}
+                className="inline-flex items-center px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <PenIcon className="w-5 h-5 mr-2" />
+                Edit Attendance
+              </Link>
+              </div>
+            </div>
           ) : (
-            <>
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
               <AttendanceList
                 students={subject?.students || []}
                 attendances={attendances}
                 handleAttendanceChange={handleAttendanceChange}
                 handleReasonChange={handleReasonChange}
               />
-              <div className="mt-8 flex justify-end">
-                <div className="flex items-center mr-4">
-                  <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                  <span>Present: {presentCount}</span>
+
+              {/* Summary and Submit */}
+              <div className="p-6 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center">
+                <div className="flex space-x-6 mb-4 sm:mb-0">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                    <span className="text-sm font-medium">
+                      Present: {presentCount}
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                    <span className="text-sm font-medium">
+                      Absent: {absentCount}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-                  <span>Absent: {absentCount}</span>
-                </div>
+
+                <button
+                  onClick={handleSubmit}
+                  className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                >
+                  Submit Attendance
+                </button>
               </div>
-              <button
-                onClick={handleSubmit}
-                className="mt-8 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 ml-4"
-              >
-                Submit Attendance
-              </button>
-            </>
+            </div>
           )}
         </div>
       )}

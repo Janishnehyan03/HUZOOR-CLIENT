@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Axios from "../../../Axios";
 import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 
 interface Statistics {
   subjectName: string;
@@ -61,75 +62,76 @@ const ManageStudentAttendance: React.FC<Props> = ({ studentId }) => {
   }
 
   return (
-    <div className="mt-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold mb-4 text-center">
-          Attendance Statistics
+    <div className="mt-8 w-full max-w-6xl mx-auto px-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+        <h2 className="text-2xl font-semibold text-gray-800 flex items-center gap-2">
+          📈 Attendance Statistics
         </h2>
         <Link to={`/attendance-details/student/${studentId}`}>
-          <button className="bg-gray-700 px-3 my-3 py-1 border-gray-600 border hover:text-gray-800 hover:bg-transparent rounded-3xl text-white">
+          <button className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-full transition-all shadow-md hover:shadow-lg">
             Go To Details
+            <ArrowRight className="w-4 h-4" />
           </button>
         </Link>
       </div>
-      <div className="flex flex-wrap space-x-3 space-y-3 m-3">
-        <h1
-          className={` font-semibold my-3  p-2 ${percentageColor}`}
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div
+          className={`rounded-lg px-4 py-3 font-medium text-white ${percentageColor}`}
         >
-          Overall Percentage {Math.floor(overallPercentage)}%
-        </h1>
-        <h1
-          className={` font-semibold my-3  p-2 ${percentageColor}`}
+          Overall Percentage: {Math.floor(overallPercentage)}%
+        </div>
+        <div
+          className={`rounded-lg px-4 py-3 font-medium text-white ${percentageColor}`}
         >
-          Medical Percentage {Math.floor(medicalPercentage)}%
-        </h1>
-        <h1
-          className={` font-semibold my-3  p-2 ${percentageColor}`}
+          Medical Percentage: {Math.floor(medicalPercentage)}%
+        </div>
+        <div
+          className={`rounded-lg px-4 py-3 font-medium text-white ${percentageColor}`}
         >
-          Official Percentage {Math.floor(officialPercentage)}%
-        </h1>
+          Official Percentage: {Math.floor(officialPercentage)}%
+        </div>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border-collapse">
-          <thead>
+
+      <div className="overflow-x-auto shadow rounded-lg border border-gray-200 bg-white">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="py-3 px-6 bg-gray-100 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b">
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Subject
               </th>
-              <th className="py-3 px-6 bg-gray-100 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b">
-                Attendance Percentage
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Attendance %
               </th>
-              <th className="py-3 px-6 bg-gray-100 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b">
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Total Attendance
               </th>
-              <th className="py-3 px-6 bg-gray-100 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b">
+              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Not Present
               </th>
-          
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-gray-100">
             {statistics.map((stat) => (
               <tr key={stat.subjectName} className="hover:bg-gray-50">
-                <td className="py-4 px-6 border-b text-sm text-gray-700">
+                <td className="px-6 py-4 text-sm text-gray-700">
                   {stat.subjectName}
                 </td>
                 <td
-                  className={`py-4 px-6 border-b text-sm ${
+                  className={`px-6 py-4 text-sm ${
                     stat.attendancePercentage < 85
-                      ? "text-red-600"
+                      ? "text-red-600 font-semibold"
                       : "text-gray-700"
                   }`}
                 >
                   {stat?.attendancePercentage?.toFixed(2)}%
                 </td>
-                <td className="py-4 px-6 border-b text-sm text-gray-700">
+                <td className="px-6 py-4 text-sm text-gray-700">
                   {stat.totalAttendanceCount}
                 </td>
-                <td className="py-4 px-6 border-b text-sm text-gray-700">
+                <td className="px-6 py-4 text-sm text-gray-700">
                   {stat.totalAbsenceCount}
                 </td>
-               
               </tr>
             ))}
           </tbody>

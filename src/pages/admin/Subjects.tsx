@@ -102,7 +102,7 @@ function Subjects() {
             setEditingSubject(null);
             setShowForm(true);
           }}
-          className="mb-4 px-6 py-2 bg-teal-600 text-white font-semibold rounded-lg shadow-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-75 transition duration-300"
+          className="mb-4 px-6 py-2 bg-orange-600 text-white font-semibold rounded-lg shadow-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-75 transition duration-300"
         >
           Create New Subject
         </button>
@@ -119,7 +119,7 @@ function Subjects() {
             />
             <label
               htmlFor="excel-upload"
-              className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg cursor-pointer shadow-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-75 transition duration-300"
+              className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg cursor-pointer shadow-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-75 transition duration-300"
             >
               Select Excel
             </label>
@@ -237,7 +237,7 @@ function Subjects() {
                             {subject.name}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                            {subject.class.name}
+                            {subject.class?.name}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-start">
                             {subject.teacher?.name}
@@ -251,7 +251,7 @@ function Subjects() {
                                 setEditingSubject(subject);
                                 setShowForm(true);
                               }}
-                              className="text-teal-500 hover:underline"
+                              className="text-orange-500 hover:underline"
                             >
                               Edit
                             </button>
@@ -259,7 +259,7 @@ function Subjects() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-start">
                             <Link
                               to={`/subject/${subject._id}`}
-                              className="text-teal-500 hover:underline"
+                              className="text-orange-500 hover:underline"
                             >
                               <Settings className="inline-block mr-1" />
                               Manage

@@ -101,19 +101,19 @@ const ManageDepartments = () => {
   }
 
   return (
-    <div className="p-4 bg-green-50 min-h-screen mx-auto my-6">
-      <div className="mb-4">
+    <div className="p-6 bg-gray-50 min-h-screen mx-auto rounded-2xl shadow-lg">
+      <div className="mb-8">
         <label
           htmlFor="classSelect"
-          className="block text-green-800 font-bold mb-2"
+          className="block text-gray-900 font-semibold mb-2 text-lg"
         >
-          Select A Class:
+          Select Class
         </label>
         <select
           id="classSelect"
           value={selectedClass}
           onChange={(e) => setSelectedClass(e.target.value)}
-          className="block appearance-none w-full bg-white border border-green-400 hover:border-green-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:ring focus:ring-green-300"
+          className="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-3 transition-all"
         >
           <option value="">Select a class</option>
           {classes.map((cls: any) => (
@@ -125,67 +125,76 @@ const ManageDepartments = () => {
       </div>
 
       {statistics.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full bg-white shadow rounded-lg">
-            <thead>
-              <tr className="bg-green-200 text-[13px]">
-                <th className="py-2 px-2 border-b">Roll Number</th>
-                <th className="py-2 px-2 border-b">Student Name</th>
-                <th className="py-2 px-2 border-b">Admission Number</th>
-                <th className="py-2 px-2 border-b">Overall Percentage</th>
-                {subjects.map((subject: string) => (
-                  <th key={subject} className="py-2 px-2 border-b">
-                    {subject}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {statistics.map((stat: StudentData, index: number) => (
-                <tr
-                  key={index}
-                  className={index % 2 === 0 ? "bg-green-50" : "bg-green-100"}
-                >
-                    <td className="py-2 px-4 border-b">{stat.rollNumber}</td>
-                  <td className="py-2 text-primary px-4 border-b">
-                    <a
-                      target="_blank"
-                      href={`/attendance-details/student/${stat.studentId}`}
-                    >
-                      {stat.studentName}
-                    </a>
-                  </td>
-                  <td className="py-2 px-4 border-b">{stat.admissionNumber}</td>
-                  <td
-                    className={`py-2 px-4 border-b ${
-                      stat.overallPercentage < 85 ? "text-red-500" : ""
-                    }`}
-                  >
-                    {stat.overallPercentage.toFixed(0)}%
-                  </td>
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm text-left">
+              <thead className="bg-blue-600 text-white text-xs uppercase tracking-wider">
+                <tr>
+                  <th className="py-3 px-6">Roll Number</th>
+                  <th className="py-3 px-6">Student Name</th>
+                  <th className="py-3 px-6">Admission Number</th>
+                  <th className="py-3 px-6">Overall %</th>
                   {subjects.map((subject: string) => (
+                    <th key={subject} className="py-3 px-6">
+                      {subject}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {statistics.map((stat: StudentData, index: number) => (
+                  <tr
+                    key={index}
+                    className={`${
+                      index % 2 === 0 ? "bg-white" : "bg-blue-50"
+                    } hover:bg-blue-100 transition`}
+                  >
+                    <td className="py-3 px-6 text-gray-700 font-medium">
+                      {stat.rollNumber}
+                    </td>
+                    <td className="py-3 px-6 text-blue-700 font-semibold">
+                      <a
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        href={`/attendance-details/student/${stat.studentId}`}
+                        className="hover:underline"
+                      >
+                        {stat.studentName}
+                      </a>
+                    </td>
+                    <td className="py-3 px-6 text-gray-700">
+                      {stat.admissionNumber}
+                    </td>
                     <td
-                      key={subject}
-                      className={`py-2 px-4 border-b ${
-                        stat.subjects[subject] !== undefined &&
-                        stat.subjects[subject] !== 0 &&
-                        stat.subjects[subject] < 85
+                      className={`py-3 px-6 font-semibold ${
+                        stat.overallPercentage < 85
                           ? "text-red-600"
-                          : ""
+                          : "text-blue-700"
                       }`}
                     >
-                      {stat.subjects[subject] !== undefined
-                        ? `${stat.subjects[subject].toFixed(0)}%` // Convert to fixed 0 decimal places and append '%'
-                        : ""}
+                      {stat.overallPercentage.toFixed(0)}%
                     </td>
-                  ))}
-            
-
-                  {/* Convert overallPercentage to percentage */}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    {subjects.map((subject: string) => (
+                      <td
+                        key={subject}
+                        className={`py-3 px-6 text-center ${
+                          stat.subjects[subject] !== undefined &&
+                          stat.subjects[subject] !== 0 &&
+                          stat.subjects[subject] < 85
+                            ? "text-red-600 font-semibold"
+                            : "text-gray-800"
+                        }`}
+                      >
+                        {stat.subjects[subject] !== undefined
+                          ? `${stat.subjects[subject].toFixed(0)}%`
+                          : "--"}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

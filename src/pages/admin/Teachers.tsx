@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { Link } from "react-router-dom";
+import * as XLSX from "xlsx"; // For reading Excel files
 import Axios from "../../Axios";
 import Loading from "../../components/Loading";
-import { Link } from "react-router-dom";
-import { User } from "lucide-react";
 import CreateTeacher from "./CreateTeacher";
-import * as XLSX from "xlsx"; // For reading Excel files
-import toast from "react-hot-toast";
+import { Plus, Upload } from "lucide-react";
 
 function Teachers() {
   const [teachers, setTeachers] = useState([]);
@@ -98,151 +98,125 @@ function Teachers() {
   };
 
   return (
-    <div className="container mx-auto mt-10 p-6 bg-teal-50 rounded-lg shadow-xl">
+    <div className="container mx-auto px-4 py-8">
       {isOpen && (
         <CreateTeacher
           setIsOpen={setIsOpen}
           selectedTeacher={selectedTeacher}
-          refreshTeachers={getTeachers} // Pass the function to refresh teachers list
+          refreshTeachers={getTeachers}
         />
       )}
+
       {loading ? (
         <Loading />
       ) : (
         <>
-          <div className="flex justify-between items-center mb-5">
-            <h1 className="text-3xl font-bold text-teal-700">Teachers</h1>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-6">
+            <div>
+              <h1 className="text-3xl font-semibold text-gray-800">
+                Teacher Management
+              </h1>
+              <p className="text-gray-500 mt-2">
+                Manage all faculty members and their details efficiently.
+              </p>
+            </div>
 
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
               <button
                 onClick={() => {
-                  setSelectedTeacher(null); // Reset selected teacher for creating new
+                  setSelectedTeacher(null);
                   setIsOpen(true);
                 }}
-                className="bg-teal-600 text-white px-4 py-2 font-semibold rounded-md hover:bg-teal-500"
+                className="bg-indigo-600 text-white px-5 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 shadow-md"
               >
-                Create Teacher
+                <Plus className="h-5 w-5" />
+                Add Teacher
               </button>
 
-              {/* Excel Upload Section */}
-              <label className="cursor-pointer flex items-center bg-teal-500 text-white px-4 py-2 font-semibold rounded-md hover:bg-teal-400">
+              <label className="cursor-pointer flex items-center justify-center gap-3 bg-white border border-indigo-600 text-indigo-600 px-5 py-3 rounded-lg font-medium hover:bg-indigo-50 transition-all shadow-md">
+                <Upload className="h-5 w-5" />
+                Import Excel
                 <input
                   type="file"
                   accept=".xlsx, .xls"
                   onChange={handleFileChange}
                   className="hidden"
                 />
-                Select Excel
               </label>
             </div>
           </div>
 
-          <div className="overflow-x-auto shadow-md">
-            <table className="min-w-full divide-y divide-teal-300">
-              <thead className="bg-teal-100">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider"
-                  >
-                    #
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider"
-                  >
-                    Image
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider"
-                  >
-                    Name
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider"
-                  >
-                    Serial Number
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider"
-                  >
-                    Edit
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider"
-                  >
-                    Delete
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-teal-700 uppercase tracking-wider"
-                  >
-                    Profile
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-teal-200">
-                {teachers.map((teacher: any, index) => (
-                  <tr key={teacher._id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-teal-800">
-                      {index + 1}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-teal-800">
-                      {teacher?.profileImage ? (
-                        <img
-                          src={teacher?.profileImage}
-                          className="h-16 w-16 object-cover rounded-full"
-                        />
-                      ) : (
-                        <User className="h-16 w-16 text-teal-500" />
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-teal-800">
-                      {teacher.name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-teal-800">
-                      {teacher?.serialNumber}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-teal-800">
-                      <button
-                        onClick={() => handleEdit(teacher)} // Open the edit modal
-                        className="bg-teal-600 text-white px-4 py-2 font-semibold rounded-md hover:bg-teal-500"
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-lg">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-100">
+                  <tr>
+                    {["#", "Name", "Serial Number", "Actions"].map((col) => (
+                      <th
+                        key={col}
+                        scope="col"
+                        className="px-6 py-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wide"
                       >
-                        Edit
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-teal-800">
-                      <button
-                        onClick={(e) => handleDelete(e, teacher._id)} // Open the edit modal
-                        className="bg-red-600 text-white px-4 py-2 font-semibold rounded-md hover:bg-red-500"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-teal-800">
-                      <Link
-                        to={`/teacher/${teacher._id}`}
-                        className="text-teal-500 hover:text-teal-700 font-semibold"
-                      >
-                        View Profile
-                      </Link>
-                    </td>
+                        {col}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {teachers.map((teacher:any, index) => (
+                    <tr
+                      key={teacher._id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {index + 1}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {teacher.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {teacher?.serialNumber || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-4">
+                        <button
+                          onClick={() => handleEdit(teacher)}
+                          className="text-indigo-600 hover:text-indigo-900 transition-all"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={(e) => handleDelete(e, teacher._id)}
+                          className="text-red-600 hover:text-red-900 transition-all"
+                        >
+                          Delete
+                        </button>
+                        <Link
+                          to={`/teacher/${teacher._id}`}
+                          className="text-gray-600 hover:text-gray-900 transition-all"
+                        >
+                          View
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          {/* Excel Data Preview Modal */}
           {showModal && (
-            <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center">
-              <div className="bg-white p-5 rounded-lg shadow-lg w-full max-w-lg">
-                <h2 className="text-lg font-semibold mb-4">Excel Preview</h2>
-                <div className="overflow-auto max-h-64">
+            <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+                <div className="p-6 border-b border-gray-200">
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    Excel Import Preview
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Review the data before uploading it to the system.
+                  </p>
+                </div>
+
+                <div className="overflow-auto p-6">
                   {excelData.length > 0 ? (
                     <table className="min-w-full divide-y divide-gray-200 text-sm">
                       <thead className="bg-gray-100">
@@ -250,7 +224,7 @@ function Teachers() {
                           {Object.keys(excelData[0]).map((key) => (
                             <th
                               key={key}
-                              className="px-4 py-2 text-left font-medium text-gray-700"
+                              className="px-4 py-3 text-left font-medium text-gray-600 uppercase tracking-wide"
                             >
                               {key}
                             </th>
@@ -258,12 +232,12 @@ function Teachers() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {excelData.map((row, index) => (
+                        {excelData.slice(0, 5).map((row, index) => (
                           <tr key={index}>
                             {Object.values(row).map((val: any, i) => (
                               <td
                                 key={i}
-                                className="px-4 py-2 text-gray-900 whitespace-nowrap"
+                                className="px-4 py-3 text-gray-700 whitespace-nowrap"
                               >
                                 {val}
                               </td>
@@ -273,22 +247,24 @@ function Teachers() {
                       </tbody>
                     </table>
                   ) : (
-                    <p>No data found.</p>
+                    <p className="text-gray-500">
+                      No data found in the Excel file.
+                    </p>
                   )}
                 </div>
 
-                <div className="flex justify-end space-x-2 mt-4">
-                  <button
-                    onClick={handleUpload}
-                    className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-500"
-                  >
-                    Upload
-                  </button>
+                <div className="flex justify-end gap-4 p-6 border-t border-gray-200">
                   <button
                     onClick={() => setShowModal(false)}
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200"
+                    className="px-5 py-3 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all"
                   >
-                    Close
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleUpload}
+                    className="px-5 py-3 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-all"
+                  >
+                    Confirm Upload
                   </button>
                 </div>
               </div>

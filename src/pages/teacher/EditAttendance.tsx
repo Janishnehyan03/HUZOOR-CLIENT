@@ -141,110 +141,134 @@ const EditAttendance: React.FC = () => {
   };
 
   return (
-    <div>
-      {loading ? (
+    <div className="max-w-7xl mx-auto px-4 py-6">
+    {loading ? (
+      <div className="flex justify-center items-center h-64">
         <Loading />
-      ) : (
-        <>
-          <div className="flex flex-col items-center justify-center mt-3">
-            <div className="mb-4">
-              <label htmlFor="date" className="mr-2 text-lg font-bold">
-                Select Date:
-              </label>
-              <DatePicker
-                id="date"
-                selected={selectedDate}
-                onChange={(date: Date) => setSelectedDate(date)}
-                className="px-2 py-1 border border-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {attendances.map((attendance, index: number) => (
-                <div
-                  key={attendance.student._id}
-                  className={`relative rounded-lg p-3 shadow-md flex items-center justify-between ${
-                    attendance.isPresent
-                      ? attendance.reason === "official"
-                        ? "bg-gray-400 hover:bg-gray-300" // Gray for official when present
-                        : "bg-teal-600 text-white" // Transparent background if present for otherattendance. reasons
-                      : !attendance.reason
-                      ? "bg-red-200 hover:bg-red-300" // Red for absent withoutattendance. reason
-                      : attendance.reason === "medical"
-                      ? "bg-green-300 hover:bg-green-300" // Green for medical
-                      : "bg-green-200 hover:bg-green-300" // Default green for other reasons
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={attendance.isPresent}
-                    onChange={(e) =>
-                      handleAttendanceChange(
-                        attendance.student._id,
-                        e.target.checked,
-                        subjectId || ""
-                      )
-                    }
-                    className="form-checkbox text-gray-500"
-                  />
-                  <span className="text-lg font-semibold">
-                    {index + 1} {attendance.student.name}
-                  </span>
-                  <button
-                    onClick={() => toggleDropdown(attendance.student._id)}
-                  >
-                    <MoreVertical />
-                  </button>
-                  {showDropdown[attendance.student._id] && (
-                    <div className="absolute right-0 mt-2 z-40 w-48 bg-white border border-gray-200 rounded shadow-lg">
+      </div>
+    ) : (
+      <div className="space-y-6">
+        {/* Date Picker */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 bg-white p-4 rounded-xl shadow-sm">
+          <label htmlFor="date" className="text-sm font-medium text-gray-700">
+            Select Date:
+          </label>
+          <DatePicker
+            id="date"
+            selected={selectedDate}
+            onChange={(date: Date) => setSelectedDate(date)}
+            className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            dateFormat="MMMM d, yyyy"
+          />
+        </div>
+  
+        {/* Attendance Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {attendances.map((attendance, ) => {
+            const statusConfig = attendance.isPresent
+              ? attendance.reason === "official"
+                ? { text: "On Duty", bg: "bg-gray-100", textColor: "text-gray-800", border: "border-gray-200" }
+                : { text: "Present", bg: "bg-teal-50", textColor: "text-teal-800", border: "border-teal-100" }
+              : !attendance.reason
+              ? { text: "Absent", bg: "bg-red-50", textColor: "text-red-800", border: "border-red-100" }
+              : attendance.reason === "medical"
+              ? { text: "Medical", bg: "bg-green-50", textColor: "text-green-800", border: "border-green-100" }
+              : { text: "Leave", bg: "bg-blue-50", textColor: "text-blue-800", border: "border-blue-100" };
+  
+            return (
+              <div
+                key={attendance.student._id}
+                className={`relative p-4 rounded-xl border ${statusConfig.bg} ${statusConfig.border} hover:shadow-md transition-all`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={attendance.isPresent}
+                      onChange={(e) =>
+                        handleAttendanceChange(
+                          attendance.student._id,
+                          e.target.checked,
+                          subjectId || ""
+                        )
+                      }
+                      className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {attendance.student.name}
+                      </p>
+                 
+                    </div>
+                  </div>
+  
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${statusConfig.bg.replace('50', '100')} ${statusConfig.textColor}`}>
+                      {statusConfig.text}
+                    </span>
+                    <button
+                      onClick={() => toggleDropdown(attendance.student._id)}
+                      className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                      aria-label="More options"
+                    >
+                      <MoreVertical size={18} />
+                    </button>
+                  </div>
+                </div>
+  
+                {/* Dropdown Menu */}
+                {showDropdown[attendance.student._id] && (
+                  <div className="absolute right-0 mt-1 z-10 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 divide-y divide-gray-100">
+                    <div className="py-1">
                       <button
-                        onClick={() =>
-                          handleReasonSelect(attendance.student._id, "official")
-                        }
-                        className={`block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-200 ${
-                          attendance.reason === "official" ? "bg-gray-200" : ""
-                        }`}
+                        onClick={() => handleReasonSelect(attendance.student._id, "official")}
+                        className={`w-full text-left px-4 py-2 text-sm ${attendance.reason === "official" ? "bg-gray-100 text-gray-900" : "text-gray-700 hover:bg-gray-50"}`}
                       >
-                        Official
+                        Official Duty
                       </button>
                       <button
-                        onClick={() =>
-                          handleReasonSelect(attendance.student._id, "medical")
-                        }
-                        className={`block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-200 ${
-                          attendance.reason === "medical" ? "bg-gray-200" : ""
-                        }`}
+                        onClick={() => handleReasonSelect(attendance.student._id, "medical")}
+                        className={`w-full text-left px-4 py-2 text-sm ${attendance.reason === "medical" ? "bg-gray-100 text-gray-900" : "text-gray-700 hover:bg-gray-50"}`}
                       >
-                        Medical
+                        Medical Leave
                       </button>
                       <button
-                        onClick={() =>
-                          handleReasonSelect(attendance.student._id, null)
-                        }
-                        className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-200"
+                        onClick={() => handleReasonSelect(attendance.student._id, null)}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                       >
-                        Remove Reason
+                        Clear Reason
                       </button>
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+  
+        {/* Submit Button */}
+        <div className="flex justify-center pt-2">
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className={`inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${isSubmitting ? "opacity-75 cursor-not-allowed" : ""}`}
+          >
             {isSubmitting ? (
-              <button className="mt-4 px-4 py-2 mb-4 bg-gray-500 text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500">
-                Submitting...
-              </button>
+              <>
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+              </>
             ) : (
-              <button
-                onClick={handleSubmit}
-                className="mt-4 px-4 py-2 mb-4 bg-gray-500 text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
-              >
-                Submit Attendance
-              </button>
+              "Submit Attendance"
             )}
-          </div>
-        </>
-      )}
-    </div>
+          </button>
+        </div>
+      </div>
+    )}
+  </div>
   );
 };
 

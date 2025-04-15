@@ -1,4 +1,4 @@
-import { MoreVertical } from "lucide-react";
+import { Briefcase, MoreVertical, PlusCircle, XCircle } from "lucide-react";
 import React, { useState } from "react";
 import { Attendance } from "../../lib/types";
 
@@ -23,7 +23,6 @@ const AttendanceList: React.FC<AttendanceListProps> = ({
       [studentId]: !prev[studentId],
     }));
   };
-  
 
   const handleReasonSelect = (studentId: string, reason: string | null) => {
     handleReasonChange(studentId, reason);
@@ -35,106 +34,157 @@ const AttendanceList: React.FC<AttendanceListProps> = ({
 
   return (
     <>
-      <div className="flex space-x-3 mx-auto w-1/2">
-        <div>
-          <div className="flex items-center space-x-3">
-            <p>Present</p>
-            <div className="h-3 w-8 bg-teal-600" />
+      {/* Status Legend - Modern Card Style */}
+      <div className="bg-white p-4 rounded-lg shadow-xs border border-gray-100 mb-6 mx-4">
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+          Attendance Status
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="flex items-center space-x-2">
+            <div className="h-3 w-3 rounded-full bg-teal-500"></div>
+            <span className="text-sm text-gray-700">Present</span>
           </div>
-          <div className="flex items-center space-x-3">
-            <p>Absent</p>
-            <div className="h-3 w-8 bg-red-200" />
+          <div className="flex items-center space-x-2">
+            <div className="h-3 w-3 rounded-full bg-red-400"></div>
+            <span className="text-sm text-gray-700">Absent</span>
           </div>
-        </div>
-        <div>
-          <div className="flex items-center space-x-3">
-            <p>Official</p>
-            <div className="h-3 w-8 bg-gray-400" />
+          <div className="flex items-center space-x-2">
+            <div className="h-3 w-3 rounded-full bg-gray-400"></div>
+            <span className="text-sm text-gray-700">Official Duty</span>
           </div>
-          <div className="flex items-center space-x-3">
-            <p>Medical</p>
-            <div className="h-3 w-8 bg-green-300" />
+          <div className="flex items-center space-x-2">
+            <div className="h-3 w-3 rounded-full bg-green-400"></div>
+            <span className="text-sm text-gray-700">Medical Leave</span>
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2  gap-4 mt-4 mx-3 px-3">
+
+      {/* Student Cards - Enhanced Design */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-4">
         {students.map((student, index) => {
           const attendance = attendances.find(
-            (attendance) =>
-              attendance.student.toString() === student._id.toString()
+            (a) => a.student.toString() === student._id.toString()
           );
           const isPresent = attendance?.isPresent;
           const reason = attendance?.reason;
 
+          // Status configuration
+          const statusConfig = {
+            present: {
+              bg: "bg-teal-50",
+              border: "border-teal-500",
+              text: "text-teal-800",
+            },
+            absent: {
+              bg: "bg-red-50",
+              border: "border-red-400",
+              text: "text-red-800",
+            },
+            official: {
+              bg: "bg-gray-50",
+              border: "border-gray-400",
+              text: "text-gray-800",
+            },
+            medical: {
+              bg: "bg-green-50",
+              border: "border-green-400",
+              text: "text-green-800",
+            },
+          };
+
+          let config = statusConfig.present;
+          if (!isPresent) {
+            config =
+              reason === "medical"
+                ? statusConfig.medical
+                : reason === "official"
+                ? statusConfig.official
+                : statusConfig.absent;
+          } else if (reason === "official") {
+            config = statusConfig.official;
+          }
+
           return (
             <div
               key={student._id}
-              className={`relative rounded-lg shadow-md flex items-center justify-between ${
-                isPresent
-                  ? reason === "official"
-                    ? "border-b-gray-400 border-b-8 hover:border-b-gray-300" // Gray for official when present
-                    : "border-b-teal-600 border-b-8 text-teal-600" // Transparent background if present for other reasons
-                  : !reason
-                  ? "border-b-red-600 border-b-8 text-red-600" // Red for absent without reason
-                  : reason === "medical"
-                  ? "border-b-green-300 border-b-8 hover:border-b-green-300" // Green for medical
-                  : "border-b-green-200 border-b-8 hover:border-b-green-300" // Default green for other reasons
-              }`}
+              className={`${config.bg} rounded-lg border-l-4 ${config.border} p-4 transition-all hover:shadow-xs`}
             >
-              <div className="flex items-center w-full h-full px-4 py-2">
-                <input
-                  type="checkbox"
-                  checked={isPresent}
-                  onChange={(e) =>
-                    handleAttendanceChange(
-                      student._id.toString(),
-                      e.target.checked
-                    )
-                  }
-                  className="form-checkbox text-green-500 focus:ring-green-400"
-                />
-                <div className="flex w-full items-center justify-between space-y-1">
-                  <p className="font-sans ml-2 uppercase">
-                    {index + 1}. {student.name}
-                  </p>
-                  <div className="">
-                    <button onClick={() => toggleDropdown(student._id)}>
-                      <MoreVertical />
-                    </button>
-                    <p className="text-xs text-gray-600">
-                      {student?.class?.name}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                  <input
+                    type="checkbox"
+                    checked={isPresent}
+                    onChange={(e) =>
+                      handleAttendanceChange(student._id, e.target.checked)
+                    }
+                    className={`h-4 w-4 rounded ${
+                      config.text
+                    } border-gray-300 focus:ring-2 focus:ring-offset-0 ${config.border.replace(
+                      "border",
+                      "focus:ring"
+                    )}`}
+                  />
+
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      <span className="text-gray-500">{index + 1}.</span>{" "}
+                      {student.name}
                     </p>
-                    {showDropdown[student._id] && (
-                      <div className="absolute right-0 mt-2 z-40 w-48 bg-white border border-gray-200 rounded shadow-lg">
+                    <p className="text-xs text-gray-500 mt-1">
+                      {student.class?.name}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => toggleDropdown(student._id)}
+                    className="text-gray-400 hover:text-gray-600 p-1 rounded-full focus:outline-none"
+                    aria-label="Attendance options"
+                  >
+                    <MoreVertical size={16} />
+                  </button>
+
+                  {showDropdown[student._id] && (
+                    <div className="absolute right-0 mt-1 z-10 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 divide-y divide-gray-100">
+                      <div className="py-1">
                         <button
                           onClick={() =>
                             handleReasonSelect(student._id, "official")
                           }
-                          className={`block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-200 ${
-                            reason === "official" ? "bg-gray-200" : ""
+                          className={`w-full text-left px-4 py-2 text-sm flex items-center ${
+                            reason === "official"
+                              ? "bg-gray-100 text-gray-900"
+                              : "text-gray-700 hover:bg-gray-50"
                           }`}
                         >
-                          Official
+                          <Briefcase size={14} className="mr-2" />
+                          Official Duty
                         </button>
                         <button
                           onClick={() =>
                             handleReasonSelect(student._id, "medical")
                           }
-                          className={`block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-200 ${
-                            reason === "medical" ? "bg-gray-200" : ""
+                          className={`w-full text-left px-4 py-2 text-sm flex items-center ${
+                            reason === "medical"
+                              ? "bg-gray-100 text-gray-900"
+                              : "text-gray-700 hover:bg-gray-50"
                           }`}
                         >
-                          Medical
+                          <PlusCircle size={14} className="mr-2" />
+                          Medical Leave
                         </button>
                         <button
                           onClick={() => handleReasonSelect(student._id, null)}
-                          className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-200"
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center"
                         >
-                          Remove Reason
+                          <XCircle size={14} className="mr-2" />
+                          Clear Reason
                         </button>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

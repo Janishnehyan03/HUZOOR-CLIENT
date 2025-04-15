@@ -10,7 +10,6 @@ const SubjectAttendance = () => {
   const [subject, setSubject] = useState<any>();
   const [loading, setLoading] = useState(false);
 
-  console.log(statistics);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,70 +39,109 @@ const SubjectAttendance = () => {
   }
 
   return (
-    <div className="p-4 bg-green-50 min-h-screen">
-      <h1 className="text-center font-bold text-2xl my-2 text-blue-700">
-        {" "}
-        {subject?.name}
-      </h1>
+    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="mb-8 text-center">
+        <h1 className="text-2xl font-bold text-gray-800">{subject?.name}</h1>
+        <p className="text-gray-500 mt-1">Attendance Statistics</p>
+      </div>
+  
+      {/* Statistics Table */}
       {statistics.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white shadow rounded-lg">
-            <thead>
-              <tr className="bg-green-200">
-                <th className="py-2 px-4 border-b">Student Name</th>
-                <th className="py-2 px-4 border-b">Admission Number</th>
-                <th className="py-2 px-4 border-b">Attendance Percentage</th>
-                <th className="py-2 px-4 border-b">Official </th>
-                <th className="py-2 px-4 border-b">Medical</th>
-                <th className="py-2 px-4 border-b">Total Attendance </th>
-                <th className="py-2 px-4 border-b">Presence </th>
-              </tr>
-            </thead>
-            <tbody>
-              {statistics.map((stat, index) => (
-                <tr
-                  key={index}
-                  className={index % 2 === 0 ? "bg-green-50" : "bg-green-100"}
-                >
-                  <td className="py-2 px-4 border-b">
-                    <Link
-                      to={`/subject-attendance/${subject?._id}/student/${stat?.studentId}`}
-                      className="hover:text-primary uppercase"
-                    >
-                      {index + 1}. {stat?.studentName}
-                    </Link>
-                  </td>
-                  <td className="py-2 px-4 border-b">{stat.admissionNumber}</td>
-                  <td
-                    className={`py-2 px-4 border-b ${
-                      stat.attendancePercentage < 85
-                        ? "text-red-600 bg-red-200"
-                        : ""
-                    }`}
-                  >
-                    {stat.attendancePercentage.toFixed(2)}%
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    {stat?.officialPercentage > 0 &&
-                      `${stat?.officialPercentage}%`}
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    {stat?.medicalPercentage > 0 &&
-                      `${stat?.medicalPercentage}%`}
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    {stat?.totalAttendanceCount}
-                  </td>
-                  <td className="py-2 px-4 border-b">
-                    {stat?.totalPresentCount}
-                  </td>
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Student
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Admission No.
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Attendance
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Official
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Medical
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Total Classes
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Present
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {statistics.map((stat, index) => (
+                  <tr key={index} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <Link
+                        to={`/subject-attendance/${subject?._id}/student/${stat?.studentId}`}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        {index + 1}. {stat?.studentName}
+                      </Link>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {stat.admissionNumber}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          stat.attendancePercentage < 85
+                            ? "bg-red-100 text-red-800"
+                            : "bg-green-100 text-green-800"
+                        }`}
+                      >
+                        {stat.attendancePercentage.toFixed(2)}%
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {stat?.officialPercentage > 0 ? (
+                        <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">
+                          {stat?.officialPercentage}%
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {stat?.medicalPercentage > 0 ? (
+                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                          {stat?.medicalPercentage}%
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {stat?.totalAttendanceCount}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {stat?.totalPresentCount}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+  
+      {/* Empty State */}
+      {statistics.length === 0 && (
+        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+          <p className="text-gray-500">No attendance statistics available</p>
         </div>
       )}
     </div>
+  </div>
   );
 };
 
