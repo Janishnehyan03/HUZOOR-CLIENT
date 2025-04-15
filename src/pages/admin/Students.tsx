@@ -145,11 +145,11 @@ const StudentTable: React.FC = () => {
 
   // Loading conditions for different actions
   if (loadingClasses) {
-    return <Loading message="Loading classes..." />;
+    return <Loading />;
   }
 
   if (loadingStudents) {
-    return <Loading message="Loading students..." />;
+    return <Loading />;
   }
 
   return (
