@@ -49,7 +49,7 @@ const DashboardDetails: React.FC = () => {
           color="bg-green-100"
         />
         <Card
-          title="Urdu Teachers"
+          title="Urdu Students"
           value={details?.urduStudents ? details?.urduStudents - 1 : ""}
           icon={<Users className="h-8 w-8 text-orange-600" />}
           color="bg-orange-100"
