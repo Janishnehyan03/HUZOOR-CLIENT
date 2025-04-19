@@ -36,21 +36,19 @@ const DashboardDetails: React.FC = () => {
         />
         <Card
           title="Total Teachers"
-          value={details?.totalTeachers ? details?.totalTeachers - 1 : ""}
+          value={details?.totalTeachers ? details?.totalTeachers  : ""}
           icon={<Users className="h-8 w-8 text-purple-600" />}
           color="bg-purple-100"
         />
         <Card
           title="Malayalam Students"
-          value={
-            details?.malayalamStudents ? details?.malayalamStudents - 1 : ""
-          }
+          value={details?.malayalamStudents ? details?.malayalamStudents : ""}
           icon={<Users className="h-8 w-8 text-green-600" />}
           color="bg-green-100"
         />
         <Card
           title="Urdu Students"
-          value={details?.urduStudents ? details?.urduStudents - 1 : ""}
+          value={details?.urduStudents ? details?.urduStudents : ""}
           icon={<Users className="h-8 w-8 text-orange-600" />}
           color="bg-orange-100"
         />
