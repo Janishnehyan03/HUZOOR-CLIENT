@@ -77,17 +77,17 @@ const ManageStudentAttendance: React.FC<Props> = ({ studentId }) => {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div
-          className={`rounded-lg px-4 py-3 font-medium text-white ${percentageColor}`}
+          className={`rounded-lg px-4 py-3 font-medium text-gray-600 ${percentageColor}`}
         >
           Overall Percentage: {Math.floor(overallPercentage)}%
         </div>
         <div
-          className={`rounded-lg px-4 py-3 font-medium text-white ${percentageColor}`}
+          className={`rounded-lg px-4 py-3 font-medium text-gray-600 ${percentageColor}`}
         >
           Medical Percentage: {Math.floor(medicalPercentage)}%
         </div>
         <div
-          className={`rounded-lg px-4 py-3 font-medium text-white ${percentageColor}`}
+          className={`rounded-lg px-4 py-3 font-medium text-gray-600 ${percentageColor}`}
         >
           Official Percentage: {Math.floor(officialPercentage)}%
         </div>
