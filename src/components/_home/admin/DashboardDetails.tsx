@@ -36,7 +36,7 @@ const DashboardDetails: React.FC = () => {
         />
         <Card
           title="Total Teachers"
-          value={details?.totalTeachers ? details?.totalTeachers  : ""}
+          value={details?.totalTeachers ? details?.totalTeachers : ""}
           icon={<Users className="h-8 w-8 text-purple-600" />}
           color="bg-purple-100"
         />
@@ -46,12 +46,15 @@ const DashboardDetails: React.FC = () => {
           icon={<Users className="h-8 w-8 text-green-600" />}
           color="bg-green-100"
         />
-        <Card
-          title="Urdu Students"
-          value={details?.urduStudents ? details?.urduStudents : ""}
-          icon={<Users className="h-8 w-8 text-orange-600" />}
-          color="bg-orange-100"
-        />
+        {import.meta.env.VITE_URDU_STUDENTS === "true" && (
+          <Card
+            title="Urdu Students"
+            value={details?.urduStudents ? details?.urduStudents : ""}
+            icon={<Users className="h-8 w-8 text-orange-600" />}
+            color="bg-orange-100"
+          />
+        )}
+
         <Card
           title="Total Subjects"
           value={details?.totalSubjects}
