@@ -16,14 +16,14 @@ export default function Footer() {
               className="h-14 w-14 object-contain"
             />
             <h1 className="text-2xl font-semibold text-gray-900">
-              SHUHOOD
+              {import.meta.env.VITE_APP_NAME}
             </h1>
           </div>
 
           {/* Description */}
           <div className="max-w-2xl mx-auto">
             <p className="text-gray-600 text-base leading-relaxed">
-              Modern attendance management system for educational institutions, 
+              Modern attendance management system for educational institutions,
               streamlining student tracking and daily reporting.
             </p>
           </div>
@@ -31,7 +31,10 @@ export default function Footer() {
           {/* Copyright and Credits */}
           <div className="mt-8 border-t border-gray-100 w-full pt-8 flex flex-col items-center gap-4">
             <div className="flex items-center justify-center flex-wrap gap-x-4 gap-y-2 text-sm text-gray-500">
-              <span>&copy; {currentYear} Shuhood</span>
+              <span>
+                &copy; {currentYear}
+                {import.meta.env.VITE_APP_NAME}
+              </span>
               <span className="hidden sm:inline-block">•</span>
               <span>All rights reserved</span>
               <span className="hidden sm:inline-block">•</span>
