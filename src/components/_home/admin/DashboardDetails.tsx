@@ -41,7 +41,7 @@ const DashboardDetails: React.FC = () => {
           color="bg-purple-100"
         />
         <Card
-          title="Malayalam Students"
+          title={import.meta.env.URDU_STUDENTS === "true" ? "Malayalam Students" : "Students"}
           value={details?.malayalamStudents ? details?.malayalamStudents : ""}
           icon={<Users className="h-8 w-8 text-green-600" />}
           color="bg-green-100"
