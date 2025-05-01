@@ -34,27 +34,55 @@ function Teachers() {
 
   // Handle file change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const selectedFile = e.target.files[0];
-      setFile(selectedFile);
-      // Parse the Excel file to show data in modal
-      const reader = new FileReader();
-      reader.onload = (event) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+
+    const selectedFile = e.target.files[0];
+
+    // Validate file type
+    if (!selectedFile.name.match(/\.(xlsx|xls|csv)$/i)) {
+      alert("Please upload an Excel file (.xlsx, .xls, or .csv)");
+      return;
+    }
+
+    setFile(selectedFile);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
         const binaryStr = event.target?.result;
         const workbook = XLSX.read(binaryStr, { type: "binary" });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const parsedData = XLSX.utils.sheet_to_json(worksheet);
+
+        if (parsedData.length === 0) {
+          alert("The Excel file is empty or couldn't be parsed");
+          return;
+        }
+
         setExcelData(parsedData);
-        setShowModal(true); // Show modal after file is selected and parsed
-      };
-      reader.readAsBinaryString(selectedFile);
-    }
+        setShowModal(true);
+      } catch (error) {
+        console.error("Error parsing Excel file:", error);
+        alert(
+          "Error parsing Excel file. Please check the format and try again."
+        );
+      }
+    };
+
+    reader.onerror = () => {
+      alert("Error reading file. Please try again.");
+    };
+
+    reader.readAsBinaryString(selectedFile);
   };
 
-  // Upload Excel file
   const handleUpload = async () => {
-    if (!file) return alert("Please select an Excel file first.");
+    if (!file) {
+      alert("Please select an Excel file first.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("file", file);
 
@@ -65,14 +93,34 @@ function Teachers() {
           "Content-Type": "multipart/form-data",
         },
       });
+
       setLoading(false);
-      alert("File uploaded successfully!");
-      setShowModal(false); // Close modal after upload
-      getTeachers(); // Refresh the list after upload
-    } catch (error) {
+      setShowModal(false); // Close the modal after upload
+      toast.success("Excel file uploaded successfully!");
+      getTeachers(); // Refresh the teacher list after upload
+      window.location.reload(); // Reload the page to reflect changes
+    } catch (error: any) {
       setLoading(false);
-      window.location.reload();
-      console.log(error);
+      console.error("Upload error:", error);
+
+      // More specific error messages
+      if (error.response) {
+        const { data } = error.response;
+        if (data.message) {
+          alert(`Upload failed: ${data.message}`);
+        } else if (data.error) {
+          alert(`Upload failed: ${data.error}`);
+        } else {
+          alert("Upload failed. Please check the file format and try again.");
+        }
+      } else if (error.request) {
+        alert("Upload failed. No response from server.");
+      } else {
+        alert("Upload failed. Please check your connection and try again.");
+      }
+
+      // Don't reload the page automatically - let the user decide
+      // window.location.reload();
     }
   };
 
@@ -163,7 +211,7 @@ function Teachers() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {teachers.map((teacher:any, index) => (
+                  {teachers.map((teacher: any, index) => (
                     <tr
                       key={teacher._id}
                       className="hover:bg-gray-50 transition-colors"
@@ -221,6 +269,9 @@ function Teachers() {
                     <table className="min-w-full divide-y divide-gray-200 text-sm">
                       <thead className="bg-gray-100">
                         <tr>
+                          <th className="px-4 py-3 text-left font-medium text-gray-600 uppercase tracking-wide">
+                            #
+                          </th>
                           {Object.keys(excelData[0]).map((key) => (
                             <th
                               key={key}
@@ -232,8 +283,11 @@ function Teachers() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {excelData.slice(0, 5).map((row, index) => (
+                        {excelData.map((row, index) => (
                           <tr key={index}>
+                            <td className="px-4 py-3 text-gray-700 whitespace-nowrap">
+                              {index + 1}
+                            </td>
                             {Object.values(row).map((val: any, i) => (
                               <td
                                 key={i}
