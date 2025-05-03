@@ -53,7 +53,9 @@ function Teachers() {
         const workbook = XLSX.read(binaryStr, { type: "binary" });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const parsedData = XLSX.utils.sheet_to_json(worksheet);
+        const parsedData = XLSX.utils.sheet_to_json(worksheet,{
+          raw: false,
+        });
 
         if (parsedData.length === 0) {
           alert("The Excel file is empty or couldn't be parsed");

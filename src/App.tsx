@@ -27,6 +27,7 @@ import EditAttendance from "./pages/teacher/EditAttendance";
 import StudentAttendanceDetails from "./pages/teacher/StudentAttendanceDetails";
 import SubjectAttendance from "./pages/teacher/SubjectAttendance";
 import Downloads from "./pages/admin/Downloads";
+import SettingsPage from "./pages/admin/SettingsPage";
 
 function App() {
   const { checkUserLoggedIn } = useAuth();
@@ -89,6 +90,10 @@ function App() {
           <Route
             path="/manage-attendance/departments"
             element={<ManageDepartments />}
+          />
+          <Route
+            path="/settings"
+            element={<SettingsPage />}
           />
         </Route>
       </Routes>
