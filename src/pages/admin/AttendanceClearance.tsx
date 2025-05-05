@@ -50,17 +50,22 @@ function AttendanceClearance() {
     setReason(event.target.value as "medical" | "official");
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e:any,studentId: string) => {
+    e.preventDefault();
     setSubmitting(true);
     try {
-      const response = await Axios.patch("/attendance/clear/attendance", {
-        admissionNumber,
-        dates: selectedDates,
-        reason,
-      });
+      const response = await Axios.patch(
+        `/attendance/clear/attendance/${studentId}`,
+
+        {
+          admissionNumber,
+          dates: selectedDates,
+          reason,
+        }
+      );
       if (response.status === 200) {
         toast.success("Attendance cleared succesfully");
-        window.location.reload()
+        window.location.reload();
       }
 
       // Optionally, you can reset the component state or show a success message.
@@ -126,7 +131,6 @@ function AttendanceClearance() {
             <div className="flex flex-wrap gap-2">
               {uniqueDates.map((date: string, index: number) => (
                 <div key={index}>
-                  
                   <label className="flex items-center">
                     <input
                       type="checkbox"
@@ -159,7 +163,7 @@ function AttendanceClearance() {
           </div>
 
           <button
-            onClick={handleSubmit}
+            onClick={(e) => handleSubmit(e,student._id)}
             className="mt-6 py-3 px-4 bg-teal-500 text-white rounded-lg text-lg font-semibold hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-opacity-50"
             disabled={submitting || selectedDates.length === 0}
           >
