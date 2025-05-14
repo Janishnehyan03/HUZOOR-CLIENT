@@ -224,6 +224,9 @@ function Subjects() {
                       <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">
                         Manage
                       </th>
+                      <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">
+                        Delete
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -264,6 +267,29 @@ function Subjects() {
                               <Settings className="inline-block mr-1" />
                               Manage
                             </Link>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-start">
+                            <button
+                              onClick={async () => {
+                                if (window.confirm("Are you sure?")) {
+                                  try {
+                                    await Axios.delete(
+                                      `/subject/${subject._id}`
+                                    );
+                                    setSubjects(
+                                      subjects.filter(
+                                        (s: any) => s._id !== subject._id
+                                      )
+                                    );
+                                  } catch (error: any) {
+                                    console.log(error.response);
+                                  }
+                                }
+                              }}
+                              className="text-red-500 hover:underline"
+                            >
+                              Delete
+                            </button>
                           </td>
                         </tr>
                       ))}
