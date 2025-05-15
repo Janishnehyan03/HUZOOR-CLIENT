@@ -73,8 +73,8 @@ const AddSubjectForm: React.FC<AddSubjectFormProps> = ({
     getTeachers();
     if (initialData) {
       setSubjectData({
-        name: initialData.name,
-        class: initialData.class?._id,
+        name: initialData?.name,
+        class: initialData?.class?._id,
         teacher: initialData?.teacher?._id,
       });
     }
