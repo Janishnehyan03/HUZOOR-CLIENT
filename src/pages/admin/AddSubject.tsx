@@ -48,7 +48,7 @@ const AddSubjectForm: React.FC<AddSubjectFormProps> = ({
       setSubmitting(true);
       if (initialData) {
         let { data } = await Axios.patch(
-          `/subject/${initialData._id}`,
+          `/subject/${initialData?._id}`,
           subjectData
         );
         navigate(0);
@@ -74,7 +74,7 @@ const AddSubjectForm: React.FC<AddSubjectFormProps> = ({
     if (initialData) {
       setSubjectData({
         name: initialData.name,
-        class: initialData.class._id,
+        class: initialData.class?._id,
         teacher: initialData?.teacher?._id,
       });
     }
@@ -108,8 +108,8 @@ const AddSubjectForm: React.FC<AddSubjectFormProps> = ({
           >
             <option value="">Select Class</option>
             {classes.map((cls: any) => (
-              <option key={cls._id} value={cls._id}>
-                {cls.name}
+              <option key={cls?._id} value={cls?._id}>
+                {cls?.name}
               </option>
             ))}
           </select>
