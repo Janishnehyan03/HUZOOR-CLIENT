@@ -79,7 +79,9 @@ function TeacherCards() {
                   <div className="p-6">
                     <div className="flex justify-between items-start mb-4">
                       <h3 className="text-xl font-bold text-gray-900 truncate">
-                        {subject.name}
+                        {subject.name} <span className="text-gray-500 text-sm">
+                           {subject.class?.name && `(${subject.class.name})`}
+                        </span>
                       </h3>
                       <button
                         className="text-gray-400 hover:text-indigo-600 transition-colors"
