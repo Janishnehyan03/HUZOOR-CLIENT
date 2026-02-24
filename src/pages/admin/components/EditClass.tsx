@@ -6,6 +6,7 @@ interface Props {
   setIsOpen: any;
   selectedClass: string;
 }
+
 const EditClass: React.FC<Props> = ({ setIsOpen, selectedClass }: Props) => {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -14,9 +15,9 @@ const EditClass: React.FC<Props> = ({ setIsOpen, selectedClass }: Props) => {
     e.preventDefault();
     try {
       setLoading(true);
-      let response = await Axios.patch(`/class/${selectedClass}`, { name });
+      const response = await Axios.patch(`/class/${selectedClass}`, { name });
       if (response.status === 200) {
-        toast.success("class edit successfully");
+        toast.success("Class updated successfully");
         setLoading(false);
         window.location.reload();
       }
@@ -26,9 +27,10 @@ const EditClass: React.FC<Props> = ({ setIsOpen, selectedClass }: Props) => {
       console.log(error.response);
     }
   };
+
   const getClass = async () => {
     try {
-      let response = await Axios.get(`/class/${selectedClass}`);
+      const response = await Axios.get(`/class/${selectedClass}`);
       setName(response.data.name);
     } catch (error: any) {
       toast.error("Something went wrong");
@@ -41,16 +43,36 @@ const EditClass: React.FC<Props> = ({ setIsOpen, selectedClass }: Props) => {
   }, [selectedClass]);
 
   return (
-    <div className="min-h-screen fixed inset-0 flex items-center justify-center bg-gray-800 opacity-95 z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-xl mx-auto">
-        <h2 className="text-3xl font-bold mb-8 text-center text-primary">
-          Edit class
-        </h2>
-        <form className="space-y-6">
+    <div className="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm z-50 px-4">
+      <div className="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
+        <div className="px-6 py-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-slate-900">Edit Class</h2>
+          <button
+            onClick={() => setIsOpen(false)}
+            className="text-slate-500 hover:text-slate-700 focus:outline-none"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div>
             <label
               htmlFor="name"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-slate-700 mb-1.5"
             >
               Class Name
             </label>
@@ -60,25 +82,25 @@ const EditClass: React.FC<Props> = ({ setIsOpen, selectedClass }: Props) => {
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 outline-none transition"
               required
             />
           </div>
 
-          <div className="flex space-x-2">
+          <div className="flex justify-end gap-3 pt-2">
             <button
+              type="button"
               onClick={() => setIsOpen(false)}
-              className="inline-flex bg-gray-700 justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              className="px-4 py-2.5 text-sm font-medium rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
-              onClick={handleSubmit}
               disabled={loading}
-              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              className="px-4 py-2.5 text-sm font-medium rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {loading ? "Loading..." : "Update"}
+              {loading ? "Updating..." : "Update Class"}
             </button>
           </div>
         </form>

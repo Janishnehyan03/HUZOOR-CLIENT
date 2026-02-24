@@ -4,6 +4,15 @@ import Loading from "../../components/Loading";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import {
+  Building2,
+  FileSpreadsheet,
+  FileText,
+  GraduationCap,
+  TrendingDown,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 
 interface StudentData {
   studentId: string;
@@ -165,119 +174,238 @@ const ManageDepartments = () => {
     return <Loading />;
   }
 
-  return (
-    <div className="p-6 bg-gray-50 min-h-screen mx-auto rounded-2xl shadow-lg">
-      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
-        <div className="mb-4 md:mb-0">
-          <label
-            htmlFor="classSelect"
-            className="block text-gray-900 font-semibold mb-2 text-lg"
-          >
-            Select Class
-          </label>
-          <select
-            id="classSelect"
-            value={selectedClass}
-            onChange={(e) => setSelectedClass(e.target.value)}
-            className="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-3 transition-all"
-          >
-            <option value="">Select a class</option>
-            {classes.map((cls: any) => (
-              <option key={cls._id} value={cls._id}>
-                {cls.name}
-              </option>
-            ))}
-          </select>
-        </div>
+  const lowAttendanceCount = statistics.filter(
+    (stat) => stat.overallPercentage < 85
+  ).length;
 
-        {statistics.length > 0 && (
-          <div className="flex gap-3">
-            <button
-              onClick={exportToExcel}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700"
-            >
-              Export Excel
-            </button>
-            <button
-              onClick={exportToPDF}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700"
-            >
-              Export PDF
-            </button>
+  return (
+    <div className="min-h-screen px-6 py-8 bg-gradient-to-br from-slate-50 via-teal-50/30 to-slate-50">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-teal-900 to-slate-900 p-8 mb-8 shadow-2xl">
+        <div className="absolute inset-0 bg-grid-slate-100/[0.02] [mask-image:radial-gradient(white,transparent_85%)]" />
+        <div className="relative">
+          <div className="flex items-center gap-4 mb-3">
+            <div className="p-3 bg-teal-500/20 rounded-2xl backdrop-blur-sm border border-teal-400/20">
+              <Building2 className="w-8 h-8 text-teal-300" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                Department Attendance Overview
+              </h1>
+              <p className="text-teal-200 mt-1 text-sm">
+                Comprehensive class-level attendance statistics and analytics
+              </p>
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
+      {/* Controls Card */}
+      <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-6 mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+          <div className="flex-1">
+            <label
+              htmlFor="classSelect"
+              className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-3"
+            >
+              <GraduationCap className="w-4 h-4 text-teal-600" />
+              Select Class
+            </label>
+            <select
+              id="classSelect"
+              value={selectedClass}
+              onChange={(e) => setSelectedClass(e.target.value)}
+              className="w-full px-4 py-3 bg-white border-2 border-slate-200 text-slate-900 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+            >
+              <option value="">Choose a class to view statistics</option>
+              {classes.map((cls: any) => (
+                <option key={cls._id} value={cls._id}>
+                  {cls.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {statistics.length > 0 && (
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={exportToExcel}
+                className="flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                Export Excel
+              </button>
+              <button
+                onClick={exportToPDF}
+                className="flex items-center gap-2 px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
+              >
+                <FileText className="w-4 h-4" />
+                Export PDF
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Statistics Summary Cards */}
       {statistics.length > 0 && (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-500 mb-1">
+                  Total Students
+                </p>
+                <p className="text-3xl font-bold text-slate-900">
+                  {statistics.length}
+                </p>
+              </div>
+              <div className="p-3 bg-indigo-100 rounded-2xl">
+                <Users className="w-8 h-8 text-indigo-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-500 mb-1">
+                  Low Attendance
+                </p>
+                <p className="text-3xl font-bold text-red-600">
+                  {lowAttendanceCount}
+                </p>
+              </div>
+              <div className="p-3 bg-red-100 rounded-2xl">
+                <TrendingDown className="w-8 h-8 text-red-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-500 mb-1">
+                  Good Standing
+                </p>
+                <p className="text-3xl font-bold text-emerald-600">
+                  {statistics.length - lowAttendanceCount}
+                </p>
+              </div>
+              <div className="p-3 bg-emerald-100 rounded-2xl">
+                <TrendingUp className="w-8 h-8 text-emerald-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Statistics Table */}
+      {statistics.length > 0 && (
+        <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm text-left">
-              <thead className="bg-blue-600 text-white text-xs uppercase tracking-wider">
+            <table className="min-w-full">
+              <thead className="bg-gradient-to-r from-teal-600 to-teal-700">
                 <tr>
-                  <th className="py-3 px-6">Roll Number</th>
-                  <th className="py-3 px-6">Student Name</th>
-                  <th className="py-3 px-6">Admission Number</th>
-                  <th className="py-3 px-6">Overall %</th>
+                  <th className="py-4 px-6 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    Roll No
+                  </th>
+                  <th className="py-4 px-6 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    Student Name
+                  </th>
+                  <th className="py-4 px-6 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    Admission No
+                  </th>
+                  <th className="py-4 px-6 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    Overall %
+                  </th>
                   {subjects.map((subject: string) => (
-                    <th key={subject} className="py-3 px-6">
+                    <th
+                      key={subject}
+                      className="py-4 px-6 text-left text-xs font-bold text-white uppercase tracking-wider"
+                    >
                       {subject}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100">
                 {statistics.map((stat: StudentData, index: number) => (
                   <tr
                     key={index}
                     className={`${
-                      index % 2 === 0 ? "bg-white" : "bg-blue-50"
-                    } hover:bg-blue-100 transition`}
+                      index % 2 === 0 ? "bg-white" : "bg-slate-50"
+                    } hover:bg-teal-50 transition-colors`}
                   >
-                    <td className="py-3 px-6 text-gray-700 font-medium">
+                    <td className="py-4 px-6 text-slate-700 font-semibold">
                       {stat.rollNumber}
                     </td>
-                    <td className="py-3 px-6 text-blue-700 font-semibold">
+                    <td className="py-4 px-6 text-teal-700 font-bold">
                       <a
                         target="_blank"
                         rel="noopener noreferrer"
                         href={`/attendance-details/student/${stat.studentId}`}
-                        className="hover:underline"
+                        className="hover:underline flex items-center gap-2"
                       >
                         {stat.studentName}
                       </a>
                     </td>
-                    <td className="py-3 px-6 text-gray-700">
+                    <td className="py-4 px-6 text-slate-600">
                       {stat.admissionNumber}
                     </td>
-                    <td
-                      className={`py-3 px-6 font-semibold ${
-                        stat.overallPercentage < 85
-                          ? "text-red-600"
-                          : "text-blue-700"
-                      }`}
-                    >
-                      {stat.overallPercentage.toFixed(0)}%
-                    </td>
-                    {subjects.map((subject: string) => (
-                      <td
-                        key={subject}
-                        className={`py-3 px-6 text-center ${
-                          stat.subjects[subject] !== undefined &&
-                          stat.subjects[subject] !== 0 &&
-                          stat.subjects[subject] < 85
-                            ? "text-red-600 font-semibold"
-                            : "text-gray-800"
+                    <td className="py-4 px-6">
+                      <span
+                        className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold ${
+                          stat.overallPercentage < 85
+                            ? "bg-red-100 text-red-700"
+                            : "bg-emerald-100 text-emerald-700"
                         }`}
                       >
-                        {stat.subjects[subject] !== undefined
-                          ? `${stat.subjects[subject].toFixed(0)}%`
-                          : "--"}
+                        {stat.overallPercentage < 85 ? (
+                          <TrendingDown className="w-3 h-3" />
+                        ) : (
+                          <TrendingUp className="w-3 h-3" />
+                        )}
+                        {stat.overallPercentage.toFixed(0)}%
+                      </span>
+                    </td>
+                    {subjects.map((subject: string) => (
+                      <td key={subject} className="py-4 px-6 text-center">
+                        {stat.subjects[subject] !== undefined &&
+                        stat.subjects[subject] !== 0 ? (
+                          <span
+                            className={`inline-block px-2 py-1 rounded-lg text-sm font-semibold ${
+                              stat.subjects[subject] < 85
+                                ? "bg-red-100 text-red-700"
+                                : "text-slate-700"
+                            }`}
+                          >
+                            {stat.subjects[subject].toFixed(0)}%
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-sm">--</span>
+                        )}
                       </td>
                     ))}
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && statistics.length === 0 && selectedClass && (
+        <div className="bg-gradient-to-br from-slate-100 to-slate-50 rounded-3xl border-2 border-dashed border-slate-300 p-16">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-slate-200 mb-4">
+              <Building2 className="w-10 h-10 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-700 mb-2">
+              No Statistics Available
+            </h3>
+            <p className="text-slate-500 text-sm">
+              No attendance data found for the selected class
+            </p>
           </div>
         </div>
       )}
