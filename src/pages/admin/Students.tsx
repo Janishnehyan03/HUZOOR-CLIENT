@@ -3,7 +3,9 @@ import { Link } from "react-router-dom";
 import * as XLSX from "xlsx";
 import Axios from "../../Axios";
 import Loading from "../../components/Loading";
+import toast from "react-hot-toast";
 import EditStudentForm from "./EditStudent";
+import { bulkDelete, formatDeleteSummary } from "../../lib/bulkDelete";
 import {
   FileSpreadsheet,
   FileText,
@@ -40,10 +42,29 @@ const StudentTable: React.FC = () => {
   const [previewStudents, setPreviewStudents] = useState<Student[]>([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [deletingSelected, setDeletingSelected] = useState(false);
 
   const tableHeaders = useMemo(
     () => ["#", "Name", "Admission Number", "Edit", "Delete"],
     []
+  );
+
+  const allVisibleStudentIds = useMemo(
+    () =>
+      students
+        .map((student) => student._id)
+        .filter((studentId): studentId is string => Boolean(studentId)),
+    [students]
+  );
+
+  const allVisibleSelected = useMemo(
+    () =>
+      allVisibleStudentIds.length > 0 &&
+      allVisibleStudentIds.every((studentId) =>
+        selectedStudentIds.includes(studentId)
+      ),
+    [allVisibleStudentIds, selectedStudentIds]
   );
 
   const selectedClassName = useMemo(() => {
@@ -70,6 +91,7 @@ const StudentTable: React.FC = () => {
   useEffect(() => {
     if (!selectedClass) {
       setStudents([]);
+      setSelectedStudentIds([]);
       return;
     }
 
@@ -80,6 +102,7 @@ const StudentTable: React.FC = () => {
           `/student?class=${selectedClass}&sortBy=rollNumber`
         );
         setStudents(data.students);
+        setSelectedStudentIds([]);
       } catch (error: any) {
         console.error(error?.response);
       } finally {
@@ -109,10 +132,30 @@ const StudentTable: React.FC = () => {
     try {
       await Axios.delete(`/student/${studentId}`);
       setStudents((prev) => prev.filter((student) => student._id !== studentId));
+      setSelectedStudentIds((prev) => prev.filter((id) => id !== studentId));
     } catch (error: any) {
       console.error(error?.response);
       alert("Failed to delete student.");
     }
+  };
+
+  const handleSelectVisibleStudents = () => {
+    if (allVisibleSelected) {
+      setSelectedStudentIds((prev) =>
+        prev.filter((id) => !allVisibleStudentIds.includes(id))
+      );
+      return;
+    }
+
+    setSelectedStudentIds((prev) => Array.from(new Set([...prev, ...allVisibleStudentIds])));
+  };
+
+  const handleSelectStudent = (studentId: string) => {
+    setSelectedStudentIds((prev) =>
+      prev.includes(studentId)
+        ? prev.filter((id) => id !== studentId)
+        : [...prev, studentId]
+    );
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -151,10 +194,40 @@ const StudentTable: React.FC = () => {
         `/student?class=${classId}&sortBy=rollNumber`
       );
       setStudents(data.students);
+      setSelectedStudentIds([]);
     } catch (error: any) {
       console.error(error?.response);
     } finally {
       setLoadingStudents(false);
+    }
+  };
+
+  const handleBulkDeleteStudents = async () => {
+    if (!selectedStudentIds.length) return;
+
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedStudentIds.length} selected students?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setDeletingSelected(true);
+      const data = await bulkDelete("student", selectedStudentIds);
+      if (selectedClass) {
+        await getStudents(selectedClass);
+      }
+      setSelectedStudentIds([]);
+      toast.success(
+        formatDeleteSummary(data, selectedStudentIds.length, "student", "students")
+      );
+    } catch (error: any) {
+      console.error(error?.response || error);
+      toast.error("Failed to delete selected students.");
+    } finally {
+      setDeletingSelected(false);
     }
   };
 
@@ -464,13 +537,34 @@ const StudentTable: React.FC = () => {
         <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-slate-900">Students List</h2>
-            <span className="text-sm text-slate-500">{students.length} records</span>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-slate-500">{students.length} records</span>
+              <button
+                onClick={handleBulkDeleteStudents}
+                disabled={!selectedStudentIds.length || deletingSelected}
+                className="rounded-lg bg-rose-600 px-3 py-1.5 text-white text-sm font-medium hover:bg-rose-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {deletingSelected
+                  ? "Deleting..."
+                  : `Delete Selected (${selectedStudentIds.length})`}
+              </button>
+            </div>
           </div>
 
           <div className="overflow-x-auto rounded-xl border border-slate-200">
             <table className="min-w-full">
               <thead className="bg-slate-100">
                 <tr>
+                  <th className="px-5 py-3 text-left">
+                    <input
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      onChange={handleSelectVisibleStudents}
+                      disabled={!allVisibleStudentIds.length}
+                      className="h-4 w-4 accent-indigo-600"
+                      aria-label="Select all visible students"
+                    />
+                  </th>
                   {tableHeaders.map((header) => (
                     <th
                       key={header}
@@ -485,6 +579,15 @@ const StudentTable: React.FC = () => {
               <tbody className="divide-y divide-slate-200 bg-white">
                 {students.map((student) => (
                   <tr key={student._id} className="hover:bg-indigo-50/40 transition">
+                    <td className="px-5 py-3 text-sm text-slate-800">
+                      <input
+                        type="checkbox"
+                        checked={selectedStudentIds.includes(student._id as string)}
+                        onChange={() => handleSelectStudent(student._id as string)}
+                        className="h-4 w-4 accent-indigo-600"
+                        aria-label={`Select ${student.name}`}
+                      />
+                    </td>
                     <td className="px-5 py-3 text-sm text-slate-800">
                       {student.rollNumber}
                     </td>
@@ -516,7 +619,7 @@ const StudentTable: React.FC = () => {
                 {!students.length && (
                   <tr>
                     <td
-                      colSpan={tableHeaders.length}
+                      colSpan={tableHeaders.length + 1}
                       className="py-10 text-center text-sm text-slate-500"
                     >
                       {selectedClass

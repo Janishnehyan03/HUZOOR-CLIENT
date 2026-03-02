@@ -1,6 +1,8 @@
 import { Layers, PlusCircle } from "lucide-react";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import Axios from "../../Axios";
+import { bulkDelete, formatDeleteSummary } from "../../lib/bulkDelete";
 import CreateClass from "./components/CreateClass.tsx";
 import EditClass from "./components/EditClass.tsx";
 
@@ -9,10 +11,13 @@ const ManageClasses = () => {
   const [classes, setClasses] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isOpenEdit, setIsOpenEdit] = useState(false);
+  const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
+  const [deletingSelected, setDeletingSelected] = useState(false);
 
   useEffect(() => {
     Axios.get("/class").then((response) => {
       setClasses(response.data.classes);
+      setSelectedClassIds([]);
     });
   }, [isOpen]);
 
@@ -24,11 +29,67 @@ const ManageClasses = () => {
       try {
         await Axios.delete(`/class/${classId}`);
         setClasses(classes.filter((classItem) => classItem._id !== classId));
+        setSelectedClassIds((prev) => prev.filter((id) => id !== classId));
         alert("Class deleted successfully!");
       } catch (error) {
         console.error("Failed to delete class:", error);
         alert("Error deleting class. Please try again.");
       }
+    }
+  };
+
+  const allVisibleClassIds = classes
+    .map((classItem) => classItem._id)
+    .filter((classId): classId is string => Boolean(classId));
+
+  const allVisibleSelected =
+    allVisibleClassIds.length > 0 &&
+    allVisibleClassIds.every((classId) => selectedClassIds.includes(classId));
+
+  const handleSelectVisible = () => {
+    if (allVisibleSelected) {
+      setSelectedClassIds((prev) =>
+        prev.filter((id) => !allVisibleClassIds.includes(id))
+      );
+      return;
+    }
+
+    setSelectedClassIds((prev) => Array.from(new Set([...prev, ...allVisibleClassIds])));
+  };
+
+  const handleSelectClass = (classId: string) => {
+    setSelectedClassIds((prev) =>
+      prev.includes(classId)
+        ? prev.filter((id) => id !== classId)
+        : [...prev, classId]
+    );
+  };
+
+  const handleBulkDeleteClasses = async () => {
+    if (!selectedClassIds.length) return;
+
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedClassIds.length} selected classes?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setDeletingSelected(true);
+      const data = await bulkDelete("class", selectedClassIds);
+      const response = await Axios.get("/class");
+      setClasses(response.data.classes);
+      setSelectedClassIds([]);
+      toast.success(
+        formatDeleteSummary(data, selectedClassIds.length, "class", "classes")
+      );
+    } catch (error) {
+      console.error("Failed to bulk delete classes:", error);
+      toast.error("Failed to delete selected classes.");
+    } finally {
+      setDeletingSelected(false);
     }
   };
 
@@ -82,11 +143,33 @@ const ManageClasses = () => {
             </button>
           </div>
 
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={handleBulkDeleteClasses}
+              disabled={!selectedClassIds.length || deletingSelected}
+              className="rounded-lg bg-rose-600 px-3 py-1.5 text-white text-sm font-medium hover:bg-rose-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {deletingSelected
+                ? "Deleting..."
+                : `Delete Selected (${selectedClassIds.length})`}
+            </button>
+          </div>
+
           {classes.length > 0 ? (
             <div className="overflow-x-auto mt-6 rounded-xl border border-slate-200">
               <table className="min-w-full bg-white text-left">
                 <thead className="bg-slate-100 text-slate-700 text-xs font-semibold uppercase tracking-wide">
                   <tr>
+                    <th className="py-3 px-6">
+                      <input
+                        type="checkbox"
+                        checked={allVisibleSelected}
+                        onChange={handleSelectVisible}
+                        disabled={!allVisibleClassIds.length}
+                        className="h-4 w-4 accent-indigo-600"
+                        aria-label="Select all visible classes"
+                      />
+                    </th>
                     <th className="py-3 px-6">Class Name</th>
                     <th className="py-3 px-6">Serial Number</th>
                     <th className="py-3 px-6">Edit</th>
@@ -101,6 +184,15 @@ const ManageClasses = () => {
                         index % 2 === 0 ? "bg-white" : "bg-slate-50"
                       } hover:bg-indigo-50/50 transition`}
                     >
+                      <td className="py-3 px-6">
+                        <input
+                          type="checkbox"
+                          checked={selectedClassIds.includes(classItem._id)}
+                          onChange={() => handleSelectClass(classItem._id)}
+                          className="h-4 w-4 accent-indigo-600"
+                          aria-label={`Select ${classItem.name}`}
+                        />
+                      </td>
                       <td className="py-3 px-6 text-sm text-slate-800 font-medium">
                         {classItem.name}
                       </td>

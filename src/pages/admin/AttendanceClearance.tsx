@@ -9,8 +9,14 @@ import {
   CalendarRange,
   Search,
   ShieldCheck,
+  Trash2,
   UserRound,
 } from "lucide-react";
+import {
+  authorizeAttendanceDelete,
+  deleteAttendance,
+  formatDeleteSummary,
+} from "../../lib/bulkDelete";
 
 dayjs.extend(localizedFormat);
 
@@ -30,6 +36,9 @@ function AttendanceClearance() {
   const [selectedDate, setSelectedDate] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
 
   const handleFetchStudentData = async () => {
     if (!admissionNumber.trim()) {
@@ -188,6 +197,96 @@ function AttendanceClearance() {
     }
   };
 
+  const resetDeleteInputs = () => {
+    setAdminPassword("");
+    setDeleteConfirmText("");
+  };
+
+  const extractAdminPermissionToken = (authorizationData: any) => {
+    const tokenCandidates = [
+      authorizationData,
+      authorizationData?.adminPermissionToken,
+      authorizationData?.permissionToken,
+      authorizationData?.token,
+      authorizationData?.data?.adminPermissionToken,
+      authorizationData?.data?.permissionToken,
+      authorizationData?.data?.token,
+      authorizationData?.permission?.adminPermissionToken,
+      authorizationData?.permission?.permissionToken,
+      authorizationData?.permission?.token,
+      authorizationData?.authorization?.adminPermissionToken,
+      authorizationData?.authorization?.token,
+      authorizationData?.result?.adminPermissionToken,
+      authorizationData?.result?.token,
+    ];
+
+    return tokenCandidates.find(
+      (candidate) => typeof candidate === "string" && candidate.trim().length > 0
+    );
+  };
+
+  const handleCompleteAttendanceDelete = async () => {
+    if (!adminPassword.trim()) {
+      toast.error("Please enter your account password to verify");
+      return;
+    }
+
+    if (deleteConfirmText.trim().toUpperCase() !== "DELETE ALL") {
+      toast.error("Type DELETE ALL to confirm");
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to delete attendance records?")) {
+      return;
+    }
+
+    try {
+      setDeleteSubmitting(true);
+      const authorizationData = await authorizeAttendanceDelete(adminPassword);
+      const adminPermissionToken = extractAdminPermissionToken(authorizationData);
+
+      if (!adminPermissionToken) {
+        toast.error("Authorization failed. Please try again.");
+        console.error(
+          "Attendance delete authorization succeeded but token was not found in response.",
+          authorizationData
+        );
+        return;
+      }
+
+      const data = await deleteAttendance({
+        deleteAll: true,
+        adminPermissionToken,
+      });
+      toast.success(
+        formatDeleteSummary(data, 0, "attendance record", "attendance records")
+      );
+      resetDeleteInputs();
+      setSelectedSubjectIds([]);
+      setAbsentSubjects([]);
+      setStudentData(null);
+      setStudent(null);
+    } catch (error: any) {
+      const statusCode = error?.response?.status;
+      const apiMessage = error?.response?.data?.message;
+
+      if (statusCode === 401 && apiMessage) {
+        toast.error(apiMessage);
+      } else if (apiMessage) {
+        toast.error(apiMessage);
+      } else {
+        toast.error("Failed to delete attendance records");
+      }
+
+      console.error(
+        "Failed to delete attendance records:",
+        error?.response?.data || error?.message || error
+      );
+    } finally {
+      setDeleteSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 px-4 sm:px-6 lg:px-8 py-8">
       <div className="max-w-5xl mx-auto space-y-6">
@@ -311,6 +410,62 @@ function AttendanceClearance() {
             </div>
           )}
           {error && <p className="text-rose-600 mt-4 text-sm">{error}</p>}
+        </section>
+
+        <section className="rounded-2xl border border-rose-200 bg-white p-5 sm:p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-slate-900 mb-2">
+            Complete Attendance Delete
+          </h2>
+          <p className="text-sm text-slate-500 mb-4">
+            Deletes all attendance records. Password verification is required.
+          </p>
+
+          <div className="space-y-4 rounded-xl border border-rose-200 bg-rose-50/40 p-4">
+            <p className="text-sm text-rose-700 font-medium">
+              High-risk action: this permanently deletes all attendance records.
+            </p>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Account Password
+              </label>
+              <input
+                type="password"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                placeholder="Enter your account password"
+                className="block w-full py-2.5 px-3 border border-slate-300 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 text-sm"
+              />
+              <p className="mt-1 text-xs text-slate-500">
+                Enter the current password of the logged-in admin account.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Type confirmation: DELETE ALL
+              </label>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="DELETE ALL"
+                className="block w-full py-2.5 px-3 border border-slate-300 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="mt-5 flex justify-end">
+            <button
+              type="button"
+              onClick={handleCompleteAttendanceDelete}
+              disabled={deleteSubmitting}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-white text-sm font-semibold hover:bg-rose-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <Trash2 className="w-4 h-4" />
+              {deleteSubmitting ? "Deleting..." : "Delete Attendance"}
+            </button>
+          </div>
         </section>
 
         {studentData && (

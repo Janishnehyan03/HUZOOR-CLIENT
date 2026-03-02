@@ -6,6 +6,7 @@ import Axios from "../../Axios";
 import Loading from "../../components/Loading";
 import CreateTeacher from "./CreateTeacher";
 import { Plus, Upload } from "lucide-react";
+import { bulkDelete, formatDeleteSummary } from "../../lib/bulkDelete";
 
 function Teachers() {
   const [teachers, setTeachers] = useState([]);
@@ -15,6 +16,8 @@ function Teachers() {
   const [excelData, setExcelData] = useState<any[]>([]); // To store parsed Excel data
   const [showModal, setShowModal] = useState(false); // Control for modal
   const [selectedTeacher, setSelectedTeacher] = useState<any>(null); // Store selected teacher for editing
+  const [selectedTeacherIds, setSelectedTeacherIds] = useState<string[]>([]);
+  const [deletingSelected, setDeletingSelected] = useState(false);
 
   const getTeachers = async () => {
     setLoading(true);
@@ -22,6 +25,7 @@ function Teachers() {
       let { data } = await Axios.get("/teacher");
       setLoading(false);
       setTeachers(data.teachers);
+      setSelectedTeacherIds([]);
     } catch (error: any) {
       setLoading(false);
       console.log(error.response);
@@ -138,12 +142,69 @@ function Teachers() {
       try {
         await Axios.delete(`/teacher/${teacherId}`);
         getTeachers(); // Refresh the teacher list
+        setSelectedTeacherIds((prev) => prev.filter((id) => id !== teacherId));
         setIsOpen(false); // Close the modal
         toast.success("Teacher Deleted");
       } catch (error) {
         console.error(error);
         toast.error("Something went wrong");
       }
+    }
+  };
+
+  const allVisibleTeacherIds = teachers
+    .map((teacher: any) => teacher?._id)
+    .filter((teacherId): teacherId is string => Boolean(teacherId));
+
+  const allVisibleSelected =
+    allVisibleTeacherIds.length > 0 &&
+    allVisibleTeacherIds.every((teacherId) => selectedTeacherIds.includes(teacherId));
+
+  const handleSelectVisible = () => {
+    if (allVisibleSelected) {
+      setSelectedTeacherIds((prev) =>
+        prev.filter((id) => !allVisibleTeacherIds.includes(id))
+      );
+      return;
+    }
+
+    setSelectedTeacherIds((prev) =>
+      Array.from(new Set([...prev, ...allVisibleTeacherIds]))
+    );
+  };
+
+  const handleSelectTeacher = (teacherId: string) => {
+    setSelectedTeacherIds((prev) =>
+      prev.includes(teacherId)
+        ? prev.filter((id) => id !== teacherId)
+        : [...prev, teacherId]
+    );
+  };
+
+  const handleBulkDeleteTeachers = async () => {
+    if (!selectedTeacherIds.length) return;
+
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedTeacherIds.length} selected teachers?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setDeletingSelected(true);
+      const data = await bulkDelete("teacher", selectedTeacherIds);
+      await getTeachers();
+      setSelectedTeacherIds([]);
+      toast.success(
+        formatDeleteSummary(data, selectedTeacherIds.length, "teacher", "teachers")
+      );
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete selected teachers");
+    } finally {
+      setDeletingSelected(false);
     }
   };
 
@@ -197,10 +258,34 @@ function Teachers() {
           </div>
 
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-lg">
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-end">
+              <button
+                onClick={handleBulkDeleteTeachers}
+                disabled={!selectedTeacherIds.length || deletingSelected}
+                className="rounded-lg bg-rose-600 px-3 py-1.5 text-white text-sm font-medium hover:bg-rose-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {deletingSelected
+                  ? "Deleting..."
+                  : `Delete Selected (${selectedTeacherIds.length})`}
+              </button>
+            </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-100">
                   <tr>
+                    <th
+                      scope="col"
+                      className="px-6 py-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wide"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={allVisibleSelected}
+                        onChange={handleSelectVisible}
+                        disabled={!allVisibleTeacherIds.length}
+                        className="h-4 w-4 accent-indigo-600"
+                        aria-label="Select all visible teachers"
+                      />
+                    </th>
                     {["#", "Name", "Serial Number", "Actions"].map((col) => (
                       <th
                         key={col}
@@ -218,6 +303,15 @@ function Teachers() {
                       key={teacher._id}
                       className="hover:bg-gray-50 transition-colors"
                     >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <input
+                          type="checkbox"
+                          checked={selectedTeacherIds.includes(teacher._id)}
+                          onChange={() => handleSelectTeacher(teacher._id)}
+                          className="h-4 w-4 accent-indigo-600"
+                          aria-label={`Select ${teacher.name}`}
+                        />
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {index + 1}
                       </td>
