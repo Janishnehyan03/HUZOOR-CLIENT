@@ -32,3 +32,13 @@ export interface Attendance {
   reason?: "official" | "medical";
   updatedBy?: string;
 }
+
+export interface MinusAttendanceRecord {
+  _id: string;
+  student: Student;
+  count: number;
+  reason?: string;
+  recordedBy?: Teacher;
+  createdAt: string;
+  updatedAt: string;
+}

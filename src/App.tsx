@@ -28,6 +28,7 @@ import StudentAttendanceDetails from "./pages/teacher/StudentAttendanceDetails";
 import SubjectAttendance from "./pages/teacher/SubjectAttendance";
 import Downloads from "./pages/admin/Downloads";
 import SettingsPage from "./pages/admin/SettingsPage";
+import MinusAttendancePage from "./pages/admin/MinusAttendance";
 
 function App() {
   const { checkUserLoggedIn } = useAuth();
@@ -55,6 +56,7 @@ function App() {
           <Route path="/add-student" element={<AddStudent />} />
           <Route path="/attendance/:subjectId" element={<AttendancePage />} />
           <Route path="/manage-attendance" element={<ManageAttendace />} />
+          <Route path="/minus-attendance" element={<MinusAttendancePage />} />
 
           <Route
             path="/edit-attendance/:subjectId"

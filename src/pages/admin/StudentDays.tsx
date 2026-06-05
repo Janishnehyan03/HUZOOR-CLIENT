@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import Axios from "../../Axios";
 import Loading from "../../components/Loading";
 import {
@@ -12,11 +12,20 @@ import {
   XCircle,
   TrendingUp,
   AlertCircle,
+  Minus,
 } from "lucide-react";
 
 type AttendanceRecord = {
   date: string;
   status: string;
+};
+
+type MinusRecord = {
+  _id: string;
+  count: number;
+  reason?: string;
+  createdAt: string;
+  recordedBy?: { name: string };
 };
 
 type Subject = {
@@ -41,6 +50,7 @@ const StudentDays = () => {
   const [attendanceDetails, setAttendanceDetails] =
     useState<AttendanceDetails | null>(null);
   const [error, setError] = useState<string>("");
+  const [minusRecords, setMinusRecords] = useState<MinusRecord[]>([]);
   const { studentId } = useParams<{ studentId: string }>();
 
   const fetchData = async () => {
@@ -69,10 +79,20 @@ const StudentDays = () => {
     }
   };
 
+  const fetchMinusRecords = async () => {
+    try {
+      const { data } = await Axios.get(`/minus-attendance?student=${studentId}`);
+      setMinusRecords(data.records);
+    } catch {
+      // silently ignore — minus records are optional
+    }
+  };
+
   useEffect(() => {
     if (studentId) {
       fetchStudent();
       fetchData();
+      fetchMinusRecords();
     }
   }, [studentId]);
 
@@ -84,6 +104,15 @@ const StudentDays = () => {
       return acc;
     }, {});
   };
+
+  const totalClasses = attendanceDetails?.statistics.reduce(
+    (s, sub) => s + sub.attendanceRecords.length, 0
+  ) ?? 0;
+  const totalPresent = attendanceDetails?.statistics.reduce(
+    (s, sub) => s + sub.attendanceRecords.filter(r => r.status === "Present").length, 0
+  ) ?? 0;
+  const totalAbsent = totalClasses - totalPresent;
+  const totalMinus = minusRecords.reduce((s, r) => s + r.count, 0);
 
   if (loading) {
     return <Loading />;
@@ -162,6 +191,75 @@ const StudentDays = () => {
                 {attendanceDetails.student.class}
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Attendance Summary */}
+      {attendanceDetails && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+          <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-indigo-500 mb-1">Total Classes</p>
+            <p className="text-3xl font-bold text-indigo-700">{totalClasses}</p>
+          </div>
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-emerald-500 mb-1">Present</p>
+            <p className="text-3xl font-bold text-emerald-700">{totalPresent}</p>
+          </div>
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-amber-500 mb-1">Absent</p>
+            <p className="text-3xl font-bold text-amber-700">{totalAbsent}</p>
+          </div>
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-rose-500 mb-1">Minus Deduction</p>
+            <p className="text-3xl font-bold text-rose-700">{totalMinus}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Minus Attendance Records */}
+      {minusRecords.length > 0 && (
+        <div className="bg-white rounded-3xl shadow-xl border border-rose-200 p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-rose-100 rounded-xl">
+                <Minus className="w-5 h-5 text-rose-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-slate-800">Minus Attendance</h2>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  Total deducted:{" "}
+                  <strong className="text-rose-700">
+                    {minusRecords.reduce((s, r) => s + r.count, 0)}
+                  </strong>{" "}
+                  classes
+                </p>
+              </div>
+            </div>
+            <Link
+              to={`/minus-attendance`}
+              className="text-sm text-rose-600 hover:text-rose-700 font-medium"
+            >
+              Manage →
+            </Link>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {minusRecords.map((record) => (
+              <div
+                key={record._id}
+                className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 flex items-center gap-3"
+              >
+                <span className="inline-flex items-center gap-1 bg-rose-200 text-rose-800 rounded-full px-3 py-0.5 text-xs font-bold">
+                  <Minus className="w-3 h-3" /> {record.count}
+                </span>
+                {record.reason && (
+                  <span className="text-sm text-slate-600 italic">"{record.reason}"</span>
+                )}
+                <span className="text-xs text-slate-400">
+                  {dayjs(record.createdAt).format("MMM D, YYYY")}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       )}

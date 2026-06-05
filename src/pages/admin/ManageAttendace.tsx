@@ -1,4 +1,4 @@
-import { BookOpen, CheckCheck, GraduationCap, User } from "lucide-react";
+import { BookOpen, CheckCheck, GraduationCap, User, Minus } from "lucide-react";
 import { Link } from "react-router-dom";
 import Axios from "../../Axios";
 import { useEffect, useState } from "react";
@@ -172,6 +172,13 @@ const ManageAttendance = () => {
             to: "/manage-attendance/attendance-clearance",
             button: "Go To Clearance",
             bgColor: "bg-purple-600",
+          },
+          {
+            title: "Minus Attendance",
+            icon: <Minus className="w-10 h-10 text-white" />,
+            to: "/minus-attendance",
+            button: "Manage Minus",
+            bgColor: "bg-rose-600",
           },
         ].map(({ title, icon, to, button, bgColor }, idx) => (
           <Link to={to} key={idx} className="group">

@@ -22,6 +22,7 @@ const ManageStudentAttendance: React.FC<Props> = ({ studentId }) => {
   const [overallPercentage, setOverallPercentage] = useState<number>(0);
   const [medicalPercentage, setMedicalPercentage] = useState<number>(0);
   const [officialPercentage, setOfficialPercentage] = useState<number>(0);
+  const [totalMinusCount, setTotalMinusCount] = useState<number>(0);
 
   const percentageColor =
     Math.floor(overallPercentage) < 85 ? "text-red-600" : "text-teal-600";
@@ -37,6 +38,7 @@ const ManageStudentAttendance: React.FC<Props> = ({ studentId }) => {
         setOverallPercentage(response.data.overallAttendance);
         setMedicalPercentage(response.data.medicalPercentage);
         setOfficialPercentage(response.data.officialPercentage);
+        setTotalMinusCount(response.data.totalMinusCount || 0);
       } catch (error) {
         console.error("Error fetching statistics:", error);
       } finally {
@@ -74,6 +76,40 @@ const ManageStudentAttendance: React.FC<Props> = ({ studentId }) => {
           </button>
         </Link>
       </div>
+
+      {/* Count summary */}
+      {(() => {
+        const totalClasses = statistics.reduce((s, st) => s + st.totalAttendanceCount, 0);
+        const totalAbsences = statistics.reduce((s, st) => s + st.totalAbsenceCount, 0);
+        const totalPresent = totalClasses - totalAbsences;
+        return (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+            <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-indigo-500 mb-0.5">Total Classes</p>
+              <p className="text-2xl font-bold text-indigo-700">{totalClasses}</p>
+            </div>
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-emerald-500 mb-0.5">Present</p>
+              <p className="text-2xl font-bold text-emerald-700">{totalPresent}</p>
+            </div>
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-amber-500 mb-0.5">Absent</p>
+              <p className="text-2xl font-bold text-amber-700">{totalAbsences}</p>
+            </div>
+            {totalMinusCount > 0 ? (
+              <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-rose-500 mb-0.5">Minus Deduction</p>
+                <p className="text-2xl font-bold text-rose-700">−{totalMinusCount}</p>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-0.5">Minus Deduction</p>
+                <p className="text-2xl font-bold text-slate-400">0</p>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div
