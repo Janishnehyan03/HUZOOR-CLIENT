@@ -1,74 +1,95 @@
-import { BookOpen, Users } from "lucide-react";
-import React from "react";
+import { BookOpen, Users, GraduationCap, Clock } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import dayjs from "dayjs";
 import { useDashboardData } from "../../../contexts/dashboardContext";
+import { useAuth } from "../../../contexts/userContext";
 
 const DashboardDetails: React.FC = () => {
   const details = useDashboardData();
+  const { user } = useAuth();
   const hasUrduStudents = import.meta.env.VITE_URDU_STUDENTS === "true";
+
+  const [timeStr, setTimeStr] = useState(dayjs().format("dddd, MMMM D, YYYY • h:mm A"));
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeStr(dayjs().format("dddd, MMMM D, YYYY • h:mm A"));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const Card: React.FC<{
     title: string;
     value: any;
     icon: React.ReactNode;
-    bgClass: string;
-  }> = ({ title, value, icon, bgClass }) => (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            {title}
-          </h2>
-          <p className="text-3xl font-bold text-slate-900 mt-2">{value ?? "N/A"}</p>
+    iconBg: string;
+  }> = ({ title, value, icon, iconBg }) => (
+    <div className="group relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-indigo-300">
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className={`h-12 w-12 rounded-2xl ${iconBg} flex items-center justify-center shadow-2xs group-hover:scale-110 transition-transform duration-300`}>
+            {icon}
+          </div>
+          <p className="text-3xl font-extrabold text-slate-900 tracking-tight">
+            {value !== undefined && value !== null ? value : "—"}
+          </p>
         </div>
-        <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${bgClass}`}>
-          {icon}
-        </div>
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
+          {title}
+        </p>
       </div>
     </div>
   );
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-6 py-8 sm:px-8 sm:py-10 mb-6 shadow-md">
-        <h1 className="text-3xl sm:text-4xl font-bold text-white">Dashboard</h1>
-        <p className="text-slate-200 mt-2 max-w-2xl">
-          Monitor academic operations with real-time visibility across students,
-          teachers, and attendance.
-        </p>
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
+      {/* Top Welcome & Time Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-200/80">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Welcome back, <span className="text-indigo-600">{user?.name || "Admin"}</span> 👋
+          </h1>
+        </div>
+
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-50/80 border border-indigo-100 text-indigo-700 text-xs font-semibold shadow-2xs">
+          <Clock className="w-4 h-4 text-indigo-600" />
+          <span>{timeStr}</span>
+        </div>
       </div>
 
+      {/* Metrics Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card
           title="Total Students"
           value={details?.totalStudents}
-          icon={<Users className="h-5 w-5 text-blue-700" />}
-          bgClass="bg-blue-100"
+          icon={<GraduationCap className="h-6 w-6 text-blue-600" />}
+          iconBg="bg-blue-50"
         />
         <Card
           title="Total Teachers"
           value={details?.totalTeachers}
-          icon={<Users className="h-5 w-5 text-purple-700" />}
-          bgClass="bg-purple-100"
+          icon={<Users className="h-6 w-6 text-indigo-600" />}
+          iconBg="bg-indigo-50"
         />
         <Card
-          title={hasUrduStudents ? "Malayalam Students" : "Students"}
+          title={hasUrduStudents ? "Malayalam Students" : "Active Students"}
           value={details?.malayalamStudents}
-          icon={<Users className="h-5 w-5 text-emerald-700" />}
-          bgClass="bg-emerald-100"
+          icon={<Users className="h-6 w-6 text-emerald-600" />}
+          iconBg="bg-emerald-50"
         />
         {hasUrduStudents && (
           <Card
             title="Urdu Students"
             value={details?.urduStudents}
-            icon={<Users className="h-5 w-5 text-orange-700" />}
-            bgClass="bg-orange-100"
+            icon={<Users className="h-6 w-6 text-amber-600" />}
+            iconBg="bg-amber-50"
           />
         )}
         <Card
           title="Total Subjects"
           value={details?.totalSubjects}
-          icon={<BookOpen className="h-5 w-5 text-rose-700" />}
-          bgClass="bg-rose-100"
+          icon={<BookOpen className="h-6 w-6 text-rose-600" />}
+          iconBg="bg-rose-50"
         />
       </div>
     </section>

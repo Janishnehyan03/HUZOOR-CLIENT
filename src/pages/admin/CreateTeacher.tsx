@@ -8,7 +8,7 @@ interface CreateTeacherProps {
   selectedTeacher: {
     _id: string;
     name: string;
-    password: string;
+    serialNumber?: string;
   } | null;
   refreshTeachers: () => void;
 }
@@ -20,64 +20,77 @@ const CreateTeacher: React.FC<CreateTeacherProps> = ({
 }) => {
   const [name, setName] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (selectedTeacher) {
-      // If editing, set the current teacher's data into the form
-      setName(selectedTeacher.name);
-      setPassword(selectedTeacher.password);
-      setProfileImage(null); // Handle the image upload if needed
+      setName(selectedTeacher.name || "");
+      setPassword(""); // Clear password field for editing
     } else {
-      // Reset form when creating
       setName("");
       setPassword("");
-      setProfileImage(null);
     }
   }, [selectedTeacher]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("password", password);
-    if (profileImage) {
-      formData.append("profileImage", profileImage);
+    if (!selectedTeacher && (!password || password.trim().length < 6)) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+
+    if (password && password.trim().length > 0 && password.trim().length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+
+    setLoading(true);
+    const payload: any = { name: name.trim() };
+    if (password && password.trim() !== "") {
+      payload.password = password.trim();
     }
 
     try {
       if (selectedTeacher) {
-        // If there's a selected teacher, update the teacher
-        await Axios.patch(`/teacher/${selectedTeacher._id}`, formData);
-        toast.success("Teacher Edited");
+        await Axios.patch(`/teacher/${selectedTeacher._id}`, payload);
+        toast.success("Teacher profile and password updated!");
       } else {
-        // If creating a new teacher
-        await Axios.post("/teacher", formData);
-        toast.success("Teacher Created");
+        await Axios.post("/teacher", payload);
+        toast.success("Teacher created successfully!");
       }
-      refreshTeachers(); // Refresh the teacher list
-      setIsOpen(false); // Close the modal
-    } catch (error) {
+      refreshTeachers();
+      setIsOpen(false);
+    } catch (error: any) {
       console.error(error);
-      toast.error("Something went wrong");
+      toast.error(error.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md border border-gray-100">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-gray-800">
-              {selectedTeacher ? "Edit Teacher" : "Create Teacher"}
-            </h2>
+          <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+            <div>
+              <h2 className="text-xl font-extrabold text-slate-900">
+                {selectedTeacher ? "Edit Teacher" : "Create New Teacher"}
+              </h2>
+              {selectedTeacher?.serialNumber && (
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                  Serial No: {selectedTeacher.serialNumber}
+                </p>
+              )}
+            </div>
             <button
+              type="button"
               onClick={() => setIsOpen(false)}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
+                className="h-5 w-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -94,47 +107,68 @@ const CreateTeacher: React.FC<CreateTeacherProps> = ({
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">
-                Name
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                Teacher Name
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all outline-none"
-                placeholder="Enter teacher's name"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none text-slate-900 text-sm"
+                placeholder="Enter full name"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">
-                Password
-              </label>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">
+                  {selectedTeacher ? "New Login Password" : "Login Password"}
+                </label>
+                {selectedTeacher && (
+                  <span className="text-[11px] font-medium text-slate-400">
+                    Optional
+                  </span>
+                )}
+              </div>
               <input
-                type="text"
+                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all outline-none"
-                placeholder="Enter password"
+                required={!selectedTeacher}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none text-slate-900 text-sm"
+                placeholder={
+                  selectedTeacher
+                    ? "Leave blank to keep current password"
+                    : "Enter password (min 6 chars)"
+                }
               />
+              {selectedTeacher && (
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Enter a new password here if you want to reset this teacher's login credentials.
+                </p>
+              )}
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-2">
+          <div className="flex justify-end space-x-3 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+              className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors text-sm font-semibold"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors font-medium shadow-sm"
+              disabled={loading}
+              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition-colors text-sm font-semibold shadow-md disabled:opacity-50"
             >
-              {selectedTeacher ? "Update" : "Create"}
+              {loading
+                ? "Saving..."
+                : selectedTeacher
+                ? "Update Teacher"
+                : "Create Teacher"}
             </button>
           </div>
         </form>

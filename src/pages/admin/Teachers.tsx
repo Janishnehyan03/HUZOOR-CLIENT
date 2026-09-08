@@ -5,7 +5,7 @@ import * as XLSX from "xlsx"; // For reading Excel files
 import Axios from "../../Axios";
 import Loading from "../../components/Loading";
 import CreateTeacher from "./CreateTeacher";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload, Edit, Trash2, Eye } from "lucide-react";
 import { bulkDelete, formatDeleteSummary } from "../../lib/bulkDelete";
 
 function Teachers() {
@@ -321,25 +321,29 @@ function Teachers() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                         {teacher?.serialNumber || "-"}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-4">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center gap-3">
                         <button
                           onClick={() => handleEdit(teacher)}
-                          className="text-indigo-600 hover:text-indigo-900 transition-all"
+                          className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-900 transition-all bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-md text-xs font-semibold"
+                          title="Edit Name & Password"
                         >
-                          Edit
-                        </button>
-                        <button
-                          onClick={(e) => handleDelete(e, teacher._id)}
-                          className="text-red-600 hover:text-red-900 transition-all"
-                        >
-                          Delete
+                          <Edit className="w-3.5 h-3.5" />
+                          Edit / Password
                         </button>
                         <Link
                           to={`/teacher/${teacher._id}`}
-                          className="text-gray-600 hover:text-gray-900 transition-all"
+                          className="inline-flex items-center gap-1 text-slate-600 hover:text-slate-900 transition-all bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-md text-xs font-semibold"
                         >
+                          <Eye className="w-3.5 h-3.5" />
                           View
                         </Link>
+                        <button
+                          onClick={(e) => handleDelete(e, teacher._id)}
+                          className="inline-flex items-center gap-1 text-rose-600 hover:text-rose-900 transition-all hover:bg-rose-50 px-2.5 py-1 rounded-md text-xs font-semibold"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}

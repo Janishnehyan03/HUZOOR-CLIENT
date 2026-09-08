@@ -23,26 +23,27 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkUserLoggedIn = async () => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      setLoading(false); // No token, no need to call the server
+    if (!token || token === "null" || token === "undefined") {
+      setUser(null);
+      setLoading(false);
       return;
     }
 
     try {
-      setLoading(true); // Start loading
+      setLoading(true);
       const response = await Axios.post("/teacher/check-login", { token });
-      setUser(response.data.user);
-
-      if (!response.data.loggedIn) {
-        localStorage.clear();
-        window.location.href = "/login"; // Redirect if not logged in
+      if (response.data?.loggedIn && response.data?.user) {
+        setUser(response.data.user);
+      } else {
+        setUser(null);
+        localStorage.removeItem("token");
       }
     } catch (error: any) {
-      console.log(error.response);
-      localStorage.clear();
-      window.location.href = "/login"; // Handle any errors by redirecting to login
+      console.log(error?.response || error);
+      setUser(null);
+      localStorage.removeItem("token");
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
 

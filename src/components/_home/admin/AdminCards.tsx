@@ -1,12 +1,11 @@
 import {
   ArrowRight,
-  Book,
-  Building,
+  BookOpen,
+  Building2,
   DownloadCloud,
-  GraduationCap,
-  PenLineIcon,
-  User,
-  UserCog,
+  PenTool,
+  Users,
+  UserCheck,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import DashboardDetails from "./DashboardDetails";
@@ -15,131 +14,84 @@ function AdminCards() {
   const cards = [
     {
       title: "Teachers",
-      description: "Manage faculty members and permissions",
-      icon: <UserCog className="w-5 h-5 text-indigo-700" />,
+      icon: <UserCheck className="w-8 h-8 text-indigo-600" />,
       link: "/teachers",
-      iconWrap: "bg-indigo-100",
+      iconBg: "bg-indigo-50 border border-indigo-100 text-indigo-600",
+      accent: "from-indigo-500 to-indigo-600",
     },
     {
       title: "Students",
-      description: "View and manage student records",
-      icon: <User className="w-5 h-5 text-emerald-700" />,
+      icon: <Users className="w-8 h-8 text-emerald-600" />,
       link: "/students",
-      iconWrap: "bg-emerald-100",
+      iconBg: "bg-emerald-50 border border-emerald-100 text-emerald-600",
+      accent: "from-emerald-500 to-emerald-600",
     },
     {
       title: "Subjects",
-      description: "Curriculum and course management",
-      icon: <Book className="w-5 h-5 text-amber-700" />,
+      icon: <BookOpen className="w-8 h-8 text-amber-600" />,
       link: "/subjects",
-      iconWrap: "bg-amber-100",
+      iconBg: "bg-amber-50 border border-amber-100 text-amber-600",
+      accent: "from-amber-500 to-amber-600",
     },
     {
       title: "Classes",
-      description: "Classrooms and scheduling",
-      icon: <Building className="w-5 h-5 text-blue-700" />,
+      icon: <Building2 className="w-8 h-8 text-blue-600" />,
       link: "/manage-classes",
-      iconWrap: "bg-blue-100",
-      featured: true,
-      badge: "Core Ops",
+      iconBg: "bg-blue-50 border border-blue-100 text-blue-600",
+      accent: "from-blue-500 to-blue-600",
     },
     {
       title: "Attendance",
-      description: "Track and analyze attendance",
-      icon: <PenLineIcon className="w-5 h-5 text-purple-700" />,
+      icon: <PenTool className="w-8 h-8 text-purple-600" />,
       link: "/manage-attendance",
-      iconWrap: "bg-purple-100",
-      featured: true,
-      badge: "Daily Focus",
+      iconBg: "bg-purple-50 border border-purple-100 text-purple-600",
+      accent: "from-purple-500 to-purple-600",
     },
     {
       title: "Downloads",
-      description: "Reports and data exports",
-      icon: <DownloadCloud className="w-5 h-5 text-rose-700" />,
+      icon: <DownloadCloud className="w-8 h-8 text-rose-600" />,
       link: "/downloads",
-      iconWrap: "bg-rose-100",
-      featured: true,
-      badge: "Reports",
+      iconBg: "bg-rose-50 border border-rose-100 text-rose-600",
+      accent: "from-rose-500 to-rose-600",
     },
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-slate-50/60 pb-16">
       <DashboardDetails />
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-sm">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div>
-              <p className="text-sm font-medium text-indigo-600 mb-2">
-                ADMIN WORKSPACE
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">
-                Quick Actions
-              </h2>
-              <p className="text-slate-600 mt-2">
-                Manage classes, people, subjects, and attendance from one place.
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-5 py-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm">
-                  <GraduationCap className="w-5 h-5 text-indigo-700" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600">System Role</p>
-                  <p className="font-semibold text-slate-900">Administrator</p>
-                </div>
-              </div>
-            </div>
-          </div>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div className="mb-5">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+            Quick Actions
+          </h2>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {/* Action Modules Grid - Large Icon on Top + Title Below */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {cards.map((card, index) => (
-            <Link to={card.link} key={index} className="group">
-              <article
-                className={`h-full rounded-2xl border p-5 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-md ${
-                  card.featured
-                    ? "bg-gradient-to-br from-white to-slate-50 border-slate-300 shadow"
-                    : "bg-white border-slate-200 shadow-sm group-hover:border-slate-300"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div
-                    className={`w-11 h-11 rounded-xl flex items-center justify-center ${card.iconWrap}`}
-                  >
+            <Link to={card.link} key={index} className="group block">
+              <article className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-xl group-hover:border-indigo-300 flex flex-col justify-between h-full min-h-[160px]">
+                {/* Top Accent Bar */}
+                <div
+                  className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${card.accent} opacity-80 group-hover:opacity-100 transition-opacity`}
+                />
+
+                <div className="flex items-start justify-between">
+                  {/* Large Icon Container on Top */}
+                  <div className={`h-16 w-16 rounded-2xl ${card.iconBg} flex items-center justify-center shadow-xs group-hover:scale-110 transition-transform duration-300`}>
                     {card.icon}
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {card.featured && (
-                      <span className="inline-flex items-center rounded-full bg-slate-900 text-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide">
-                        {card.badge}
-                      </span>
-                    )}
-                    <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700" />
+                  <div className="h-9 w-9 rounded-full bg-slate-100 group-hover:bg-indigo-600 flex items-center justify-center text-slate-400 group-hover:text-white transition-all duration-200">
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </div>
 
-                <div className="mt-4">
-                  <h3 className="text-lg font-semibold text-slate-900">
+                <div className="mt-6">
+                  <h3 className="text-xl font-extrabold text-slate-900 group-hover:text-indigo-600 transition-colors">
                     {card.title}
                   </h3>
-                  <p className="text-sm text-slate-600 mt-1 leading-6">
-                    {card.description}
-                  </p>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-slate-100">
-                  <span
-                    className={`text-sm font-medium ${
-                      card.featured ? "text-slate-900" : "text-slate-800"
-                    }`}
-                  >
-                    Open Module
-                  </span>
                 </div>
               </article>
             </Link>

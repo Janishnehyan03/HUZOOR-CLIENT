@@ -7,38 +7,39 @@ import Header from "./Header";
 
 const PrivateRoutes: React.FC = () => {
   const token = localStorage.getItem("token");
+  const isValidToken = token && token !== "null" && token !== "undefined";
   const { setUser } = useAuth();
 
   useEffect(() => {
     const checkLoggedIn = async () => {
-      // Get token from localStorage
+      if (!isValidToken) return;
 
       try {
-        // Send token to server to check login status
         const response = await Axios.post("/teacher/check-login", { token });
-        setUser(response.data.user);
-        if (!response.data.loggedIn) {
-          localStorage.clear();
+        if (response.data?.loggedIn && response.data?.user) {
+          setUser(response.data.user);
+        } else {
+          localStorage.removeItem("token");
           window.location.href = "/login";
         }
       } catch (error: any) {
-        console.log(error.response);
+        console.log(error?.response || error);
+        localStorage.removeItem("token");
+        window.location.href = "/login";
       }
     };
 
     checkLoggedIn();
-  }, []);
+  }, [token]);
 
-
-
-  return token ? (
+  return isValidToken ? (
     <>
       <Header />
       <Outlet />
       <Footer />
     </>
   ) : (
-    <Navigate to="/login" />
+    <Navigate to="/login" replace />
   );
 };
 
