@@ -49,6 +49,22 @@ export const authorizeAttendanceDelete = async (password: string) => {
   return data;
 };
 
+export const deleteAllMinusAttendance = async (payload: { adminPermissionToken: string }) => {
+  const { data } = await Axios.delete("/minus-attendance/delete-all", {
+    data: payload,
+  });
+
+  return data;
+};
+
+export const authorizeMinusAttendanceDelete = async (password: string) => {
+  const { data } = await Axios.post("/minus-attendance/delete/authorize", {
+    password,
+  });
+
+  return data;
+};
+
 export const formatDeleteSummary = (
   data: any,
   fallbackCount: number,

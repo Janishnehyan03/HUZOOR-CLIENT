@@ -15,6 +15,11 @@ import {
 } from "lucide-react";
 import dayjs from "dayjs";
 import * as XLSX from "xlsx";
+import {
+  authorizeMinusAttendanceDelete,
+  deleteAllMinusAttendance,
+  formatDeleteSummary,
+} from "../../lib/bulkDelete";
 
 interface MinusRecord {
   _id: string;
@@ -61,6 +66,11 @@ const MinusAttendancePage: React.FC = () => {
   const [editCount, setEditCount] = useState<number>(0);
   const [editReason, setEditReason] = useState("");
 
+  // ── Delete All state ───────────────────────────────────────────────
+  const [adminPassword, setAdminPassword] = useState("");
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+
   // Load all records on mount and tab switch
   useEffect(() => {
     if (activeTab === "Manage Records") fetchAllRecords();
@@ -75,6 +85,76 @@ const MinusAttendancePage: React.FC = () => {
       toast.error("Failed to load records");
     } finally {
       setLoadingRecords(false);
+    }
+  };
+
+  const resetDeleteInputs = () => {
+    setAdminPassword("");
+    setDeleteConfirmText("");
+  };
+
+  const extractAdminPermissionToken = (authorizationData: any) => {
+    const tokenCandidates = [
+      authorizationData,
+      authorizationData?.adminPermissionToken,
+      authorizationData?.permissionToken,
+      authorizationData?.token,
+      authorizationData?.data?.adminPermissionToken,
+      authorizationData?.data?.permissionToken,
+      authorizationData?.data?.token,
+    ];
+
+    return tokenCandidates.find(
+      (candidate) => typeof candidate === "string" && candidate.trim().length > 0
+    );
+  };
+
+  const handleCompleteMinusDelete = async () => {
+    if (!adminPassword.trim()) {
+      toast.error("Please enter your account password to verify");
+      return;
+    }
+
+    if (deleteConfirmText.trim().toUpperCase() !== "DELETE ALL") {
+      toast.error("Type DELETE ALL to confirm");
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to delete all minus attendance records?")) {
+      return;
+    }
+
+    try {
+      setDeleteSubmitting(true);
+      const authorizationData = await authorizeMinusAttendanceDelete(adminPassword);
+      const adminPermissionToken = extractAdminPermissionToken(authorizationData);
+
+      if (!adminPermissionToken) {
+        toast.error("Authorization failed. Please try again.");
+        return;
+      }
+
+      const data = await deleteAllMinusAttendance({
+        adminPermissionToken,
+      });
+      toast.success(
+        formatDeleteSummary(data, 0, "minus record", "minus records")
+      );
+      resetDeleteInputs();
+      fetchAllRecords();
+    } catch (error: any) {
+      const statusCode = error?.response?.status;
+      const apiMessage = error?.response?.data?.message;
+
+      if (statusCode === 401 && apiMessage) {
+        toast.error(apiMessage);
+      } else if (apiMessage) {
+        toast.error(apiMessage);
+      } else {
+        toast.error("Failed to delete minus records");
+      }
+    } finally {
+      setDeleteSubmitting(false);
     }
   };
 
@@ -486,6 +566,63 @@ const MinusAttendancePage: React.FC = () => {
                 </table>
               </div>
             )}
+
+            {/* Complete Delete Danger Card */}
+            <div className="rounded-2xl border border-rose-200 bg-white p-5 sm:p-6 shadow-sm mt-6">
+              <h2 className="text-lg font-semibold text-slate-900 mb-2">
+                Complete Minus Records Delete
+              </h2>
+              <p className="text-sm text-slate-500 mb-4">
+                Deletes all minus attendance records. Password verification is required.
+              </p>
+
+              <div className="space-y-4 rounded-xl border border-rose-200 bg-rose-50/40 p-4">
+                <p className="text-sm text-rose-700 font-medium">
+                  High-risk action: this permanently deletes all minus attendance records.
+                </p>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Account Password
+                  </label>
+                  <input
+                    type="password"
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    placeholder="Enter your account password"
+                    className="block w-full py-2.5 px-3 border border-slate-300 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 text-sm"
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Enter the current password of the logged-in admin account.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Type confirmation: DELETE ALL
+                  </label>
+                  <input
+                    type="text"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder="DELETE ALL"
+                    className="block w-full py-2.5 px-3 border border-slate-300 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-5 flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleCompleteMinusDelete}
+                  disabled={deleteSubmitting}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-white text-sm font-semibold hover:bg-rose-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {deleteSubmitting ? "Deleting..." : "Delete All Minus Records"}
+                </button>
+              </div>
+            </div>
           </section>
         )}
       </div>
