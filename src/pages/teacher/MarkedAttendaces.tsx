@@ -5,9 +5,16 @@ interface MarkedAttendacesProps {
 }
 
 const MarkedAttendaces: React.FC<MarkedAttendacesProps> = ({ attendances }) => {
+  const sortedAttendances = [...(attendances || [])].sort((a, b) => {
+    const rollA = Number(a?.student?.rollNumber) || 0;
+    const rollB = Number(b?.student?.rollNumber) || 0;
+    if (rollA !== rollB) return rollA - rollB;
+    return (a?.student?.name || "").localeCompare(b?.student?.name || "");
+  });
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-      {attendances?.map((attendance) => {
+      {sortedAttendances.map((attendance) => {
         // Determine status and styling based on attendance
         let status = "";
         let statusClass = "";
@@ -39,10 +46,13 @@ const MarkedAttendaces: React.FC<MarkedAttendacesProps> = ({ attendances }) => {
             className={`rounded-lg p-4 shadow-sm border ${statusClass} transition-all hover:shadow-md hover:-translate-y-0.5`}
           >
             <div className="flex justify-between items-start mb-2">
-              <p className="font-semibold text-gray-900 truncate">
-                {attendance?.student?.name}
+              <p className="font-semibold text-gray-900 truncate flex items-center gap-1.5">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-white/80 border border-gray-200 text-gray-700 shadow-2xs">
+                  Roll {attendance?.student?.rollNumber || "—"}
+                </span>
+                <span className="truncate">{attendance?.student?.name}</span>
               </p>
-              <span className="px-2 py-1 text-xs font-medium rounded-full ${statusClass.replace('50', '100')}">
+              <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusClass.replace('50', '100')}`}>
                 {status}
               </span>
             </div>

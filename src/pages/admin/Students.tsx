@@ -4,12 +4,13 @@ import * as XLSX from "xlsx";
 import Axios from "../../Axios";
 import Loading from "../../components/Loading";
 import toast from "react-hot-toast";
-import EditStudentForm from "./EditStudent";
 import { bulkDelete, formatDeleteSummary } from "../../lib/bulkDelete";
 import {
   FileSpreadsheet,
   FileText,
   GraduationCap,
+  Loader2,
+  Pencil,
   Upload,
   Users,
   X,
@@ -30,9 +31,119 @@ interface Student {
   rollNumber: number;
 }
 
+interface InlineEditableCellProps {
+  value: string | number;
+  type?: "text" | "number";
+  placeholder?: string;
+  className?: string;
+  min?: number;
+  onSave: (val: string | number) => Promise<void>;
+  validate?: (val: string | number) => string | null;
+}
+
+const InlineEditableCell: React.FC<InlineEditableCellProps> = ({
+  value,
+  type = "text",
+  placeholder,
+  className = "",
+  min,
+  onSave,
+  validate,
+}) => {
+  const [currentVal, setCurrentVal] = useState<string | number>(value ?? "");
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLocalSaving, setIsLocalSaving] = useState(false);
+
+  useEffect(() => {
+    setCurrentVal(value ?? "");
+  }, [value]);
+
+  const handleCommit = async () => {
+    setIsEditing(false);
+    const trimmedVal =
+      typeof currentVal === "string" ? currentVal.trim() : currentVal;
+
+    if (String(trimmedVal) === String(value ?? "").trim()) {
+      setCurrentVal(value ?? "");
+      return;
+    }
+
+    if (validate) {
+      const err = validate(trimmedVal);
+      if (err) {
+        toast.error(err);
+        setCurrentVal(value ?? "");
+        return;
+      }
+    }
+
+    setIsLocalSaving(true);
+    try {
+      await onSave(trimmedVal);
+    } catch {
+      setCurrentVal(value ?? "");
+    } finally {
+      setIsLocalSaving(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.currentTarget.blur();
+    } else if (e.key === "Escape") {
+      setCurrentVal(value ?? "");
+      setIsEditing(false);
+    }
+  };
+
+  return (
+    <div
+      className={`relative inline-flex items-center w-full min-h-[36px] ${className}`}
+    >
+      {isEditing ? (
+        <input
+          type={type}
+          min={min}
+          autoFocus
+          value={currentVal}
+          onChange={(e) => setCurrentVal(e.target.value)}
+          onBlur={handleCommit}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          className="w-full rounded-lg border-2 border-indigo-500 bg-white px-2.5 py-1 text-sm font-medium text-slate-900 shadow-sm outline-none ring-2 ring-indigo-200 transition"
+        />
+      ) : (
+        <div
+          tabIndex={0}
+          role="button"
+          onFocus={() => setIsEditing(true)}
+          onClick={() => setIsEditing(true)}
+          className="group flex items-center justify-between gap-2 w-full px-2.5 py-1.5 -mx-2.5 rounded-lg border border-transparent hover:border-slate-300 hover:bg-indigo-50/60 focus:bg-indigo-50/60 focus:border-indigo-400 focus:outline-none cursor-text transition"
+          title="Click to edit"
+        >
+          <span className="truncate text-slate-800 text-sm font-medium">
+            {currentVal !== undefined &&
+            currentVal !== null &&
+            String(currentVal) !== "" ? (
+              currentVal
+            ) : (
+              <span className="text-slate-400 italic text-xs">Set value...</span>
+            )}
+          </span>
+          <span className="opacity-0 group-hover:opacity-100 group-focus:opacity-100 text-slate-400 transition-opacity">
+            {isLocalSaving ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600" />
+            ) : (
+              <Pencil className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600" />
+            )}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const StudentTable: React.FC = () => {
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [classes, setClasses] = useState<Class[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("");
@@ -44,9 +155,25 @@ const StudentTable: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [deletingSelected, setDeletingSelected] = useState(false);
+  const [rowStatus, setRowStatus] = useState<
+    Record<string, "saving" | "saved" | "error">
+  >({});
+
+  const sortStudentsByRollNumber = (list: Student[]) => {
+    return [...list].sort((a, b) => {
+      const rollA = Number(a.rollNumber);
+      const rollB = Number(b.rollNumber);
+      const validA = !isNaN(rollA) && rollA > 0;
+      const validB = !isNaN(rollB) && rollB > 0;
+      if (validA && validB) return rollA - rollB;
+      if (validA && !validB) return -1;
+      if (!validA && validB) return 1;
+      return (a.name || "").localeCompare(b.name || "");
+    });
+  };
 
   const tableHeaders = useMemo(
-    () => ["#", "Name", "Admission Number", "Edit", "Delete"],
+    () => ["Roll No", "Name", "Admission Number", "Delete"],
     []
   );
 
@@ -101,7 +228,7 @@ const StudentTable: React.FC = () => {
         const { data } = await Axios.get(
           `/student?class=${selectedClass}&sortBy=rollNumber`
         );
-        setStudents(data.students);
+        setStudents(sortStudentsByRollNumber(data.students || []));
         setSelectedStudentIds([]);
       } catch (error: any) {
         console.error(error?.response);
@@ -113,17 +240,58 @@ const StudentTable: React.FC = () => {
     fetchStudents();
   }, [selectedClass]);
 
-  const handleEditClick = (student: Student) => {
-    setEditingStudent(student);
-    setShowEditForm(true);
-  };
+  const handleInlineUpdate = async (
+    studentId: string,
+    field: "rollNumber" | "name" | "admissionNumber",
+    value: string | number
+  ) => {
+    const student = students.find((s) => s._id === studentId);
+    if (!student) return;
 
-  const handleUpdate = (updatedStudent: Student) => {
-    setStudents((prev) =>
-      prev.map((student) =>
-        student._id === updatedStudent._id ? updatedStudent : student
-      )
-    );
+    if (student[field] === value) return;
+
+    setRowStatus((prev) => ({ ...prev, [studentId]: "saving" }));
+
+    try {
+      const payload: any = {};
+      if (field === "rollNumber") {
+        payload.rollNumber = Number(value);
+      } else {
+        payload[field] = String(value).trim();
+      }
+
+      await Axios.patch(`/student/${studentId}`, payload);
+
+      setStudents((prev) =>
+        sortStudentsByRollNumber(
+          prev.map((s) => (s._id === studentId ? { ...s, ...payload } : s))
+        )
+      );
+
+      setRowStatus((prev) => ({ ...prev, [studentId]: "saved" }));
+      toast.success(
+        `Updated ${
+          field === "rollNumber"
+            ? "Roll No"
+            : field === "admissionNumber"
+            ? "Admission No"
+            : "Name"
+        } for ${student.name}`
+      );
+
+      setTimeout(() => {
+        setRowStatus((prev) => {
+          const next = { ...prev };
+          delete next[studentId];
+          return next;
+        });
+      }, 2500);
+    } catch (error: any) {
+      console.error(error);
+      setRowStatus((prev) => ({ ...prev, [studentId]: "error" }));
+      toast.error("Failed to auto-save changes.");
+      throw error;
+    }
   };
 
   const deleteStudent = async (studentId: string) => {
@@ -193,7 +361,7 @@ const StudentTable: React.FC = () => {
       const { data } = await Axios.get(
         `/student?class=${classId}&sortBy=rollNumber`
       );
-      setStudents(data.students);
+      setStudents(sortStudentsByRollNumber(data.students || []));
       setSelectedStudentIds([]);
     } catch (error: any) {
       console.error(error?.response);
@@ -263,10 +431,10 @@ const StudentTable: React.FC = () => {
   const handleExcelDownload = () => {
     const worksheet = XLSX.utils.json_to_sheet(
       students.map(({ name, admissionNumber, rollNumber, class: classData }) => ({
-        name,
-        admissionNumber,
-        rollNumber,
-        class:
+        "Roll No": rollNumber,
+        "Name": name,
+        "Admission Number": admissionNumber,
+        "Class":
           classes.find((item) => item._id === classData._id)?.name ||
           classData.name,
       }))
@@ -283,7 +451,7 @@ const StudentTable: React.FC = () => {
 
     autoTable(document, {
       startY: 20,
-      head: [["#", "Name", "Admission Number", "Class"]],
+      head: [["Roll No", "Name", "Admission Number", "Class"]],
       body: students.map((student) => [
         student.rollNumber,
         student.name,
@@ -302,15 +470,6 @@ const StudentTable: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 px-4 sm:px-6 lg:px-8 py-8">
-      {showEditForm && editingStudent && (
-        <EditStudentForm
-          student={editingStudent}
-          classes={classes}
-          onClose={() => setShowEditForm(false)}
-          onUpdate={handleUpdate}
-        />
-      )}
-
       <div className="max-w-7xl mx-auto space-y-6">
         <section className="rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 p-6 sm:p-8 shadow-md">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
@@ -535,8 +694,14 @@ const StudentTable: React.FC = () => {
         )}
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-slate-900">Students List</h2>
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Students List</h2>
+              <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
+                <span className="inline-block w-2 h-2 rounded-full bg-indigo-500"></span>
+                Click or focus any <strong>Roll No</strong>, <strong>Name</strong>, or <strong>Admission No</strong> to edit inline.
+              </p>
+            </div>
             <div className="flex items-center gap-3">
               <span className="text-sm text-slate-500">{students.length} records</span>
               <button
@@ -555,7 +720,7 @@ const StudentTable: React.FC = () => {
             <table className="min-w-full">
               <thead className="bg-slate-100">
                 <tr>
-                  <th className="px-5 py-3 text-left">
+                  <th className="px-5 py-3 text-left w-12">
                     <input
                       type="checkbox"
                       checked={allVisibleSelected}
@@ -577,44 +742,103 @@ const StudentTable: React.FC = () => {
               </thead>
 
               <tbody className="divide-y divide-slate-200 bg-white">
-                {students.map((student) => (
-                  <tr key={student._id} className="hover:bg-indigo-50/40 transition">
-                    <td className="px-5 py-3 text-sm text-slate-800">
-                      <input
-                        type="checkbox"
-                        checked={selectedStudentIds.includes(student._id as string)}
-                        onChange={() => handleSelectStudent(student._id as string)}
-                        className="h-4 w-4 accent-indigo-600"
-                        aria-label={`Select ${student.name}`}
-                      />
-                    </td>
-                    <td className="px-5 py-3 text-sm text-slate-800">
-                      {student.rollNumber}
-                    </td>
-                    <td className="px-5 py-3 text-sm text-slate-800">
-                      {student.name}
-                    </td>
-                    <td className="px-5 py-3 text-sm text-slate-800">
-                      {student.admissionNumber}
-                    </td>
-                    <td className="px-5 py-3">
-                      <button
-                        onClick={() => handleEditClick(student)}
-                        className="rounded-lg bg-indigo-600 px-3 py-1.5 text-white text-sm font-medium hover:bg-indigo-700 transition"
-                      >
-                        Edit
-                      </button>
-                    </td>
-                    <td className="px-5 py-3">
-                      <button
-                        onClick={() => deleteStudent(student._id as string)}
-                        className="rounded-lg bg-rose-600 px-3 py-1.5 text-white text-sm font-medium hover:bg-rose-700 transition"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {students.map((student) => {
+                  const status = rowStatus[student._id as string];
+                  return (
+                    <tr
+                      key={student._id}
+                      className={`hover:bg-indigo-50/40 transition ${
+                        status === "saving"
+                          ? "bg-amber-50/40"
+                          : status === "saved"
+                          ? "bg-emerald-50/30"
+                          : ""
+                      }`}
+                    >
+                      <td className="px-5 py-3 text-sm text-slate-800">
+                        <input
+                          type="checkbox"
+                          checked={selectedStudentIds.includes(
+                            student._id as string
+                          )}
+                          onChange={() =>
+                            handleSelectStudent(student._id as string)
+                          }
+                          className="h-4 w-4 accent-indigo-600"
+                          aria-label={`Select ${student.name}`}
+                        />
+                      </td>
+                      <td className="px-5 py-3 text-sm text-slate-800 min-w-[110px] max-w-[130px]">
+                        <InlineEditableCell
+                          value={student.rollNumber}
+                          type="number"
+                          min={1}
+                          placeholder="Roll #"
+                          validate={(val) => {
+                            const num = Number(val);
+                            if (isNaN(num) || num <= 0 || !Number.isInteger(num)) {
+                              return "Roll number must be a positive whole number";
+                            }
+                            return null;
+                          }}
+                          onSave={(newVal) =>
+                            handleInlineUpdate(
+                              student._id as string,
+                              "rollNumber",
+                              newVal
+                            )
+                          }
+                        />
+                      </td>
+                      <td className="px-5 py-3 text-sm text-slate-800 min-w-[200px]">
+                        <InlineEditableCell
+                          value={student.name}
+                          type="text"
+                          placeholder="Full Name"
+                          validate={(val) => {
+                            if (!String(val).trim())
+                              return "Student name cannot be empty";
+                            return null;
+                          }}
+                          onSave={(newVal) =>
+                            handleInlineUpdate(
+                              student._id as string,
+                              "name",
+                              newVal
+                            )
+                          }
+                        />
+                      </td>
+                      <td className="px-5 py-3 text-sm text-slate-800 min-w-[180px]">
+                        <InlineEditableCell
+                          value={student.admissionNumber}
+                          type="text"
+                          placeholder="Admission #"
+                          validate={(val) => {
+                            if (!String(val).trim())
+                              return "Admission number cannot be empty";
+                            return null;
+                          }}
+                          onSave={(newVal) =>
+                            handleInlineUpdate(
+                              student._id as string,
+                              "admissionNumber",
+                              newVal
+                            )
+                          }
+                        />
+                      </td>
+                      <td className="px-5 py-3">
+                        <button
+                          onClick={() => deleteStudent(student._id as string)}
+                          className="rounded-lg bg-rose-50 hover:bg-rose-600 border border-rose-200 hover:border-rose-600 px-3 py-1.5 text-rose-700 hover:text-white text-xs font-medium transition"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
 
                 {!students.length && (
                   <tr>

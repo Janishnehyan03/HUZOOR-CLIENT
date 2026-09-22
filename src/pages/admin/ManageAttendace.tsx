@@ -48,10 +48,21 @@ const ManageAttendance = () => {
   }, [classId]);
 
   const groupBySubject = (statistics: any[]) => {
-    return statistics.reduce((acc, item) => {
+    const grouped = statistics.reduce((acc, item) => {
       (acc[item.subjectName] = acc[item.subjectName] || []).push(item);
       return acc;
     }, {});
+
+    Object.keys(grouped).forEach((key) => {
+      grouped[key].sort((a: any, b: any) => {
+        const rollA = Number(a.rollNumber) || 0;
+        const rollB = Number(b.rollNumber) || 0;
+        if (rollA !== rollB) return rollA - rollB;
+        return (a.studentName || "").localeCompare(b.studentName || "");
+      });
+    });
+
+    return grouped;
   };
 
   const groupedStatistics = groupBySubject(statistics);
@@ -71,6 +82,7 @@ const ManageAttendance = () => {
           startY: 25,
           head: [
             [
+              "Roll No",
               "Student",
               "Adm. No",
               "Total",
@@ -81,6 +93,7 @@ const ManageAttendance = () => {
             ],
           ],
           body: students.map((item: any) => [
+            item.rollNumber ?? "—",
             item.studentName,
             item.admissionNumber,
             item.totalAttendanceCount,
@@ -105,6 +118,7 @@ const ManageAttendance = () => {
     Object.entries(groupedStatistics).forEach(([subject, students]: any) => {
       const wsData = [
         [
+          "Roll No",
           "Student",
           "Adm. No",
           "Total",
@@ -114,6 +128,7 @@ const ManageAttendance = () => {
           "Overall",
         ],
         ...students.map((item: any) => [
+          item.rollNumber ?? "—",
           item.studentName,
           item.admissionNumber,
           item.totalAttendanceCount,
@@ -274,6 +289,9 @@ const ManageAttendance = () => {
                         <thead className="bg-gray-50">
                           <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Roll No
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               Student
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -299,6 +317,9 @@ const ManageAttendance = () => {
                         <tbody className="bg-white divide-y divide-gray-200">
                           {students.map((item: any, index: number) => (
                             <tr key={index} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                                {item.rollNumber ?? index + 1}
+                              </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {item.studentName}
                               </td>

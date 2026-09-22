@@ -243,13 +243,20 @@ const MinusAttendancePage: React.FC = () => {
   };
 
   // ── Manage records helpers ─────────────────────────────────────────
-  const filteredRecords = records.filter((r) => {
-    const q = search.toLowerCase();
-    return (
-      r.student?.name?.toLowerCase().includes(q) ||
-      r.student?.admissionNumber?.toLowerCase().includes(q)
-    );
-  });
+  const filteredRecords = records
+    .filter((r) => {
+      const q = search.toLowerCase();
+      return (
+        r.student?.name?.toLowerCase().includes(q) ||
+        r.student?.admissionNumber?.toLowerCase().includes(q)
+      );
+    })
+    .sort((a, b) => {
+      const rollA = Number(a.student?.rollNumber) || 0;
+      const rollB = Number(b.student?.rollNumber) || 0;
+      if (rollA !== rollB) return rollA - rollB;
+      return (a.student?.name || "").localeCompare(b.student?.name || "");
+    });
 
   const startEdit = (record: MinusRecord) => {
     setEditingId(record._id);
@@ -475,6 +482,7 @@ const MinusAttendancePage: React.FC = () => {
                 <table className="min-w-full text-sm">
                   <thead className="bg-slate-50">
                     <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Roll No.</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Student</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Adm. No.</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Minus</th>
@@ -487,6 +495,7 @@ const MinusAttendancePage: React.FC = () => {
                   <tbody className="divide-y divide-slate-100">
                     {filteredRecords.map((record) => (
                       <tr key={record._id} className="hover:bg-slate-50">
+                        <td className="px-4 py-3 font-bold text-indigo-600">{record.student?.rollNumber ?? "—"}</td>
                         <td className="px-4 py-3 font-medium text-slate-800">{record.student?.name}</td>
                         <td className="px-4 py-3 text-slate-600">{record.student?.admissionNumber}</td>
                         <td className="px-4 py-3">

@@ -14,12 +14,12 @@ interface Student {
 }
 
 interface Attendance {
-  _id: string;
+  _id?: string;
   isPresent: boolean;
   student: Student;
-  date: string;
-  subject: string;
-  reason: string | null;
+  date?: string;
+  subject?: string;
+  reason?: string | null;
 }
 
 const EditAttendance: React.FC = () => {
@@ -45,8 +45,14 @@ const EditAttendance: React.FC = () => {
         }`
       );
 
-      if (response.data.length > 0) {        
-        setAttendances(response.data);
+      if (response.data.length > 0) {
+        const sorted = [...response.data].sort((a: any, b: any) => {
+          const rollA = Number(a.student?.rollNumber) || 0;
+          const rollB = Number(b.student?.rollNumber) || 0;
+          if (rollA !== rollB) return rollA - rollB;
+          return (a.student?.name || "").localeCompare(b.student?.name || "");
+        });
+        setAttendances(sorted);
       } else {
         getSubject();
       }
@@ -62,16 +68,24 @@ const EditAttendance: React.FC = () => {
       const { data } = await Axios.get(`/subject/${subjectId}`);
       setLoading(false);
 
-      const initialAttendances = data.subject.students.map(
-        (student: Student) => ({
-          subject: subjectId,
-          student: {
-            name: student.name,
-            _id: student._id,
-          },
-          isPresent: true,
-        })
+      const sortedStudents = [...(data.subject.students || [])].sort(
+        (a: any, b: any) => {
+          const rollA = Number(a.rollNumber) || 0;
+          const rollB = Number(b.rollNumber) || 0;
+          if (rollA !== rollB) return rollA - rollB;
+          return (a.name || "").localeCompare(b.name || "");
+        }
       );
+
+      const initialAttendances = sortedStudents.map((student: Student) => ({
+        subject: subjectId,
+        student: {
+          name: student.name,
+          _id: student._id,
+          rollNumber: student.rollNumber,
+        },
+        isPresent: true,
+      }));
 
       setAttendances(initialAttendances);
     } catch (error: any) {
@@ -195,10 +209,12 @@ const EditAttendance: React.FC = () => {
                       className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                     />
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {attendance.student.name}
+                      <p className="text-sm font-semibold text-gray-900 truncate flex items-center gap-1.5">
+                        <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-white/80 border border-gray-200 text-gray-700 shadow-2xs">
+                          Roll {attendance.student?.rollNumber || "—"}
+                        </span>
+                        <span className="truncate">{attendance.student.name}</span>
                       </p>
-                 
                     </div>
                   </div>
   

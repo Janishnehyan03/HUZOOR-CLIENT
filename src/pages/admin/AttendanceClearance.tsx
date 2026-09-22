@@ -486,6 +486,12 @@ function AttendanceClearance() {
                   <span className="font-semibold">Admission Number:</span>{" "}
                   {student.admissionNumber}
                 </p>
+                {student.rollNumber && (
+                  <p className="text-slate-700 text-sm sm:text-base">
+                    <span className="font-semibold">Roll Number:</span>{" "}
+                    {student.rollNumber}
+                  </p>
+                )}
               </div>
 
               <div className="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3">

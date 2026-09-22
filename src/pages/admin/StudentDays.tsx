@@ -37,6 +37,7 @@ type Student = {
   name: string;
   admissionNumber: string;
   class: string;
+  rollNumber?: number | string;
 };
 
 type AttendanceDetails = {
@@ -135,9 +136,16 @@ const StudentDays = () => {
               <User className="w-10 h-10 text-violet-300" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-white mb-2">
-                {student?.name || "Student Details"}
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-4xl font-bold text-white mb-2">
+                  {student?.name || "Student Details"}
+                </h1>
+                {student?.rollNumber && (
+                  <span className="px-3 py-1 rounded-full text-sm font-semibold bg-white/20 text-white border border-white/30 mb-2">
+                    Roll {student.rollNumber}
+                  </span>
+                )}
+              </div>
               <p className="text-violet-200 text-lg">
                 {student?.admissionNumber || "Loading..."}
               </p>
@@ -157,7 +165,7 @@ const StudentDays = () => {
               Student Information
             </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
               <div className="flex items-center gap-2 mb-2">
                 <User className="w-4 h-4 text-slate-500" />
@@ -189,6 +197,16 @@ const StudentDays = () => {
               </div>
               <p className="text-slate-900 font-semibold text-lg">
                 {attendanceDetails.student.class}
+              </p>
+            </div>
+            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  Roll Number
+                </span>
+              </div>
+              <p className="text-slate-900 font-semibold text-lg">
+                {student?.rollNumber || attendanceDetails.student.rollNumber || "—"}
               </p>
             </div>
           </div>

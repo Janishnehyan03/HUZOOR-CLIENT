@@ -22,9 +22,20 @@ function ManageSubject() {
     try {
       setLoading(true);
       let { data } = await Axios.get(`/subject/${subjectId}`);
+      const sortedStudents = [...(data?.subject?.students || [])].sort(
+        (a: any, b: any) => {
+          const rollA = Number(a.rollNumber) || 0;
+          const rollB = Number(b.rollNumber) || 0;
+          if (rollA !== rollB) return rollA - rollB;
+          return (a.name || "").localeCompare(b.name || "");
+        }
+      );
+      if (data?.subject) {
+        data.subject.students = sortedStudents;
+      }
       setSubject(data?.subject);
-      if (data?.subject?.students) {
-        setStudents(data.subject.students.map((student: any) => student._id));
+      if (sortedStudents) {
+        setStudents(sortedStudents.map((student: any) => student._id));
       }
       setLoading(false);
     } catch (error: any) {
@@ -45,8 +56,14 @@ function ManageSubject() {
   // Function to fetch students based on selected class
   const getStudentsByClass = async (classId: string) => {
     try {
-      let { data } = await Axios.get(`/student?class=${classId}`);
-      setClassStudents(data.students);
+      let { data } = await Axios.get(`/student?class=${classId}&sortBy=rollNumber:asc`);
+      const sorted = (data.students || []).sort((a: any, b: any) => {
+        const rollA = Number(a.rollNumber) || 0;
+        const rollB = Number(b.rollNumber) || 0;
+        if (rollA !== rollB) return rollA - rollB;
+        return (a.name || "").localeCompare(b.name || "");
+      });
+      setClassStudents(sorted);
     } catch (error: any) {
       console.log(error.response);
     }
@@ -128,11 +145,14 @@ function ManageSubject() {
             )}
             <label
               htmlFor={student._id}
-              className={`cursor-pointer font-medium ${
+              className={`cursor-pointer font-medium flex items-center gap-2 ${
                 isChecked ? "text-indigo-900" : "text-slate-700"
               }`}
             >
-              {student.name}
+              <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                Roll {student.rollNumber ?? "—"}
+              </span>
+              <span>{student.name}</span>
             </label>
           </div>
           <input
@@ -223,6 +243,9 @@ function ManageSubject() {
                         #
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
+                        Roll No.
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
                         Name
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
@@ -244,6 +267,9 @@ function ManageSubject() {
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
                           {index + 1}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-indigo-600">
+                          {student.rollNumber ?? "—"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900">
                           {student.name}

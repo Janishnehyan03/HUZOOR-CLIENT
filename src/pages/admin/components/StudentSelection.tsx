@@ -41,9 +41,17 @@ const StudentSelect: React.FC<Props> = ({ onSelect }) => {
       if (selectedClass) {
         try {
           const response = await Axios.get(
-            `/student?class=${selectedClass}&sort=rollNumber`
-          ); // Replace with your API endpoint
-          setStudents(response.data.students);
+            `/student?class=${selectedClass}&sortBy=rollNumber:asc`
+          );
+          const sorted = (response.data.students || []).sort(
+            (a: any, b: any) => {
+              const rollA = Number(a.rollNumber) || 0;
+              const rollB = Number(b.rollNumber) || 0;
+              if (rollA !== rollB) return rollA - rollB;
+              return (a.name || "").localeCompare(b.name || "");
+            }
+          );
+          setStudents(sorted);
         } catch (error) {
           console.error("Error fetching students:", error);
         }
@@ -108,7 +116,7 @@ const StudentSelect: React.FC<Props> = ({ onSelect }) => {
             <option value="">-- Select a Student --</option>
             {students.map((student) => (
               <option key={student._id} value={student._id}>
-                {student?.rollNumber} {student.name}
+                Roll {student?.rollNumber || "—"} - {student.name}
               </option>
             ))}
           </select>

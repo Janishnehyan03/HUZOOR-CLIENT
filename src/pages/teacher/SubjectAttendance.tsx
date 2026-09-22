@@ -23,7 +23,16 @@ const SubjectAttendance = () => {
           `/attendance/get/statistics?subject=${subjectId}`
         );
 
-        setStatistics(attendanceResponse.data.statistics);
+        const sorted = (attendanceResponse.data.statistics || []).sort(
+          (a: any, b: any) => {
+            const rollA = Number(a.rollNumber) || 0;
+            const rollB = Number(b.rollNumber) || 0;
+            if (rollA !== rollB) return rollA - rollB;
+            return (a.studentName || "").localeCompare(b.studentName || "");
+          }
+        );
+
+        setStatistics(sorted);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -55,6 +64,9 @@ const SubjectAttendance = () => {
               <thead className="bg-gray-100">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Roll No.
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Student
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -80,12 +92,15 @@ const SubjectAttendance = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {statistics.map((stat, index) => (
                   <tr key={index} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                      {stat.rollNumber ?? index + 1}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Link
                         to={`/subject-attendance/${subject?._id}/student/${stat?.studentId}`}
                         className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
                       >
-                        {index + 1}. {stat?.studentName}
+                        {stat?.studentName}
                       </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 const AddStudentForm: React.FC = () => {
   const [name, setName] = useState("");
   const [admissionNumber, setAdmissionNumber] = useState("");
+  const [rollNumber, setRollNumber] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
   const [classes, setClasses] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +31,7 @@ const AddStudentForm: React.FC = () => {
     event.preventDefault();
 
     if (!name || !admissionNumber || !selectedClass) {
-      setError("All fields are required");
+      setError("Name, admission number, and class are required");
       return;
     }
 
@@ -38,16 +39,22 @@ const AddStudentForm: React.FC = () => {
     setError("");
 
     try {
-      await Axios.post("/student", {
+      const payload: any = {
         name,
         admissionNumber,
         class: selectedClass,
-      }); // Replace with your API endpoint
+      };
+      if (rollNumber.trim() !== "") {
+        payload.rollNumber = Number(rollNumber);
+      }
+
+      await Axios.post("/student", payload);
       setName("");
       setAdmissionNumber("");
+      setRollNumber("");
       setSelectedClass("");
       toast.success("Student added");
-      navigate("/");
+      navigate("/students");
       // Optionally handle success (e.g., show a success message or redirect)
     } catch (error) {
       console.error("Error adding student:", error);
@@ -109,6 +116,23 @@ const AddStudentForm: React.FC = () => {
             onChange={(e) => setAdmissionNumber(e.target.value)}
             className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
             placeholder="e.g. ADM-2023-001"
+          />
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-sm font-medium text-gray-700">
+              Roll Number
+            </label>
+            <span className="text-xs text-gray-400">Optional (auto-assigned if blank)</span>
+          </div>
+          <input
+            type="number"
+            min="1"
+            value={rollNumber}
+            onChange={(e) => setRollNumber(e.target.value)}
+            className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
+            placeholder="e.g. 1"
           />
         </div>
 

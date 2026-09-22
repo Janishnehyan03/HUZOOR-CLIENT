@@ -34,14 +34,21 @@ function AttendancePage() {
     try {
       const { data } = await Axios.get(`/subject/${subjectId}`);
       setLoading(false);
-      setSubject(data.subject);
-      const initialAttendances = data.subject.students.map(
-        (student: Student) => ({
-          subject: subjectId,
-          student: student._id,
-          isPresent: true,
-        })
+      const sortedStudents = [...(data.subject.students || [])].sort(
+        (a: any, b: any) => {
+          const rollA = Number(a.rollNumber) || 0;
+          const rollB = Number(b.rollNumber) || 0;
+          if (rollA !== rollB) return rollA - rollB;
+          return (a.name || "").localeCompare(b.name || "");
+        }
       );
+      data.subject.students = sortedStudents;
+      setSubject(data.subject);
+      const initialAttendances = sortedStudents.map((student: Student) => ({
+        subject: subjectId,
+        student: student._id,
+        isPresent: true,
+      }));
       setAttendances(initialAttendances);
     } catch (error: any) {
       setLoading(false);

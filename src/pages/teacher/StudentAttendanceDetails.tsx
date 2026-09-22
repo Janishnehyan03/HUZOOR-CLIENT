@@ -49,7 +49,14 @@ const AbsenceStatistics = () => {
     <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8 border border-gray-100">
       {/* Student Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-5">
-        <h2 className="text-2xl font-bold text-white">{statistics.studentName}</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-white">{statistics.studentName}</h2>
+          {statistics.rollNumber && (
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-white/20 text-white border border-white/30">
+              Roll {statistics.rollNumber}
+            </span>
+          )}
+        </div>
         <p className="text-blue-100">{statistics.admissionNumber}</p>
       </div>
   

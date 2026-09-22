@@ -25,9 +25,15 @@ const EditStudentForm: React.FC<EditStudentFormProps> = ({
   const [selectedClass, setSelectedClass] = useState("");
 
   useEffect(() => {
-    setName(student.name);
-    setAdmissionNumber(student.admissionNumber);
-    setSelectedClass(student.classId); // Assuming student object has a classId field
+    setName(student?.name || "");
+    setAdmissionNumber(student?.admissionNumber || "");
+    setRollNumber(student?.rollNumber || 0);
+    setSelectedClass(
+      student?.class?._id ||
+        (typeof student?.class === "string" ? student.class : "") ||
+        student?.classId ||
+        ""
+    );
   }, [student]);
 
   const handleSubmit = async (e: React.FormEvent) => {

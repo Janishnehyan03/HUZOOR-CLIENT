@@ -61,7 +61,14 @@ const AttendanceList: React.FC<AttendanceListProps> = ({
 
       {/* Student Cards - Enhanced Design */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-4">
-        {students.map((student, index) => {
+        {[...(students || [])]
+          .sort((a, b) => {
+            const rollA = Number(a.rollNumber) || 0;
+            const rollB = Number(b.rollNumber) || 0;
+            if (rollA !== rollB) return rollA - rollB;
+            return (a.name || "").localeCompare(b.name || "");
+          })
+          .map((student, index) => {
           const attendance = attendances.find(
             (a) => a.student.toString() === student._id.toString()
           );
@@ -126,12 +133,14 @@ const AttendanceList: React.FC<AttendanceListProps> = ({
                   />
 
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      <span className="text-gray-500">{index + 1}.</span>{" "}
-                      {student.name}
+                    <p className="text-sm font-semibold text-gray-900 truncate flex items-center gap-1.5">
+                      <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-white/80 border border-gray-200 text-gray-700 shadow-2xs">
+                        Roll {student.rollNumber ?? index + 1}
+                      </span>
+                      <span className="truncate">{student.name}</span>
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {student.class?.name}
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {student.class?.name || (student.admissionNumber ? `Adm: ${student.admissionNumber}` : "")}
                     </p>
                   </div>
                 </div>
