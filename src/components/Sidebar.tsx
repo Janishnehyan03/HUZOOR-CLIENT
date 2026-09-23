@@ -25,6 +25,7 @@ const navItems = [
   { to: "/manage-classes", label: "Classes", icon: Building2 },
   { to: "/subjects", label: "Subjects", icon: BookOpen },
   { to: "/manage-attendance", label: "Attendance", icon: CalendarCheck },
+  { to: "/monthly-report", label: "Monthly Report", icon: CalendarCheck },
   { to: "/downloads", label: "Downloads", icon: Download },
 ];
 

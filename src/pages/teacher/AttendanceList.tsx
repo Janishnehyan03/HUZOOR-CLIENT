@@ -114,33 +114,20 @@ const AttendanceList: React.FC<AttendanceListProps> = ({
           return (
             <div
               key={student._id}
-              className={`${config.bg} rounded-lg border-l-4 ${config.border} p-4 transition-all hover:shadow-xs`}
+              onClick={() => handleAttendanceChange(student._id, !isPresent)}
+              className={`${config.bg} rounded-lg border-l-4 ${config.border} p-4 transition-all hover:shadow-xs cursor-pointer select-none`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3 flex-1 min-w-0">
-                  <input
-                    type="checkbox"
-                    checked={isPresent}
-                    onChange={(e) =>
-                      handleAttendanceChange(student._id, e.target.checked)
-                    }
-                    className={`h-4 w-4 rounded ${
-                      config.text
-                    } border-gray-300 focus:ring-2 focus:ring-offset-0 ${config.border.replace(
-                      "border",
-                      "focus:ring"
-                    )}`}
-                  />
-
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-gray-900 truncate flex items-center gap-1.5">
-                      <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-white/80 border border-gray-200 text-gray-700 shadow-2xs">
-                        Roll {student.rollNumber ?? index + 1}
+                      <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-[11px] font-bold bg-white/80 border border-gray-200 text-gray-700 shadow-2xs">
+                        {student.rollNumber ?? index + 1}
                       </span>
                       <span className="truncate">{student.name}</span>
                     </p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {student.class?.name || (student.admissionNumber ? `Adm: ${student.admissionNumber}` : "")}
+                    <p className="text-xs text-gray-500 mt-1">
+                      {student.admissionNumber ? `Adm: ${student.admissionNumber}` : ""} {student.class?.name ? `• ${student.class.name}` : ""}
                     </p>
                   </div>
                 </div>

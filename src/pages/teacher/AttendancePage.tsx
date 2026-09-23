@@ -161,19 +161,37 @@ function AttendancePage() {
           attendances[0]?.subject?.toString() === subjectId ? (
             <div className="space-y-8">
               <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Marked Attendances
-              </h3>
-              <MarkedAttendaces attendances={attendancesData} />
-              </div>
-              <div className="flex justify-end">
-              <Link
-                to={`/edit-attendance/${subjectId}`}
-                className="inline-flex items-center px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <PenIcon className="w-5 h-5 mr-2" />
-                Edit Attendance
-              </Link>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Marked Attendances
+                  </h3>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        const maxSession = Math.max(
+                          ...attendancesData.map((a: any) => a.session || 1),
+                          0
+                        );
+                        setAttendances((prev) =>
+                          prev.map((a) => ({ ...a, session: maxSession + 1 }))
+                        );
+                        setAttendancesData([]); // Clear this to show the marking UI
+                      }}
+                      className="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                    >
+                      <PenIcon className="w-4 h-4 mr-2" />
+                      Take Extra Attendance
+                    </button>
+                    <Link
+                      to={`/edit-attendance/${subjectId}`}
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      <PenIcon className="w-4 h-4 mr-2" />
+                      Edit Attendance
+                    </Link>
+                  </div>
+                </div>
+                <MarkedAttendaces attendances={attendancesData} />
               </div>
             </div>
           ) : (

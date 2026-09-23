@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Axios from "../../Axios";
+import { useAuth } from "../../contexts/userContext";
+import toast from "react-hot-toast";
 
 interface PasswordForm {
   oldPassword: string;
@@ -19,6 +21,34 @@ const App = () => {
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { user, setUser } = useAuth();
+  const [isActive, setIsActive] = useState<boolean>(user?.isActive ?? true);
+  const [isStatusLoading, setIsStatusLoading] = useState<boolean>(false);
+
+  const handleStatusToggle = async () => {
+    setIsStatusLoading(true);
+    try {
+      const newStatus = !isActive;
+      const response = await Axios.patch(
+        "/teacher/update-status/mine",
+        { isActive: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      setIsActive(newStatus);
+      if (user) {
+        setUser({ ...user, isActive: newStatus });
+      }
+      toast.success(response.data.message || "Status updated");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to update status");
+    } finally {
+      setIsStatusLoading(false);
+    }
+  };
 
   const onSubmit = async (data: PasswordForm) => {
     if (data.newPassword !== data.confirmPassword) {
@@ -63,6 +93,32 @@ const App = () => {
           <p className="mt-2 text-center text-sm text-gray-600">
             Please enter your current and new password
           </p>
+        </div>
+
+        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <div>
+            <h3 className="text-sm font-medium text-gray-900">Availability Status</h3>
+            <p className="text-sm text-gray-500">
+              {isActive ? "You are currently active." : "You are currently marked as inactive."}
+            </p>
+          </div>
+          <button
+            onClick={handleStatusToggle}
+            disabled={isStatusLoading}
+            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+              isActive ? "bg-indigo-600" : "bg-gray-200"
+            } ${isStatusLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+            role="switch"
+            aria-checked={isActive}
+          >
+            <span className="sr-only">Toggle availability</span>
+            <span
+              aria-hidden="true"
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                isActive ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>

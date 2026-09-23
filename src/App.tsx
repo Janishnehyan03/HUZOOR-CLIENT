@@ -26,12 +26,14 @@ import AttendancePage from "./pages/teacher/AttendancePage";
 import EditAttendance from "./pages/teacher/EditAttendance";
 import StudentAttendanceDetails from "./pages/teacher/StudentAttendanceDetails";
 import SubjectAttendance from "./pages/teacher/SubjectAttendance";
+import TeachersList from "./pages/teacher/TeachersList";
 import Downloads from "./pages/admin/Downloads";
 import SettingsPage from "./pages/admin/SettingsPage";
 import MinusAttendancePage from "./pages/admin/MinusAttendance";
+import MonthlyReport from "./pages/admin/MonthlyReport";
 
 function App() {
-  const { checkUserLoggedIn } = useAuth();
+  const { checkUserLoggedIn, user } = useAuth();
   useEffect(() => {
     checkUserLoggedIn();
   }, []);
@@ -47,7 +49,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/downloads" element={<Downloads />} />
           <Route path="/manage-classes" element={<ManageClasses />} />
-          <Route path="/teachers" element={<Teachers />} />
+          <Route path="/teachers" element={user?.role === "admin" ? <Teachers /> : <TeachersList />} />
           <Route path="/teacher/:teacherId" element={<TeacherProfile />} />
           <Route path="/subjects" element={<Subjects />} />
           <Route path="/subject/:subjectId" element={<ManageSubject />} />
@@ -57,6 +59,7 @@ function App() {
           <Route path="/attendance/:subjectId" element={<AttendancePage />} />
           <Route path="/manage-attendance" element={<ManageAttendace />} />
           <Route path="/minus-attendance" element={<MinusAttendancePage />} />
+          <Route path="/monthly-report" element={<MonthlyReport />} />
 
           <Route
             path="/edit-attendance/:subjectId"
@@ -96,6 +99,10 @@ function App() {
           <Route
             path="/settings"
             element={<SettingsPage />}
+          />
+          <Route
+            path="/teachers-list"
+            element={<TeachersList />}
           />
         </Route>
       </Routes>

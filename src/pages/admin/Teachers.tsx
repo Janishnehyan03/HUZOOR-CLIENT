@@ -286,7 +286,7 @@ function Teachers() {
                         aria-label="Select all visible teachers"
                       />
                     </th>
-                    {["#", "Name", "Serial Number", "Actions"].map((col) => (
+                    {["#", "Name", "Serial Number", "Status", "Actions"].map((col) => (
                       <th
                         key={col}
                         scope="col"
@@ -320,6 +320,17 @@ function Teachers() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                         {teacher?.serialNumber || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            teacher.isActive !== false
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-rose-100 text-rose-700"
+                          }`}
+                        >
+                          {teacher.isActive !== false ? "Active" : "Inactive"}
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center gap-3">
                         <button

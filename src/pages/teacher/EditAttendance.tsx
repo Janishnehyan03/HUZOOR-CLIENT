@@ -11,6 +11,7 @@ interface Student {
   _id: string;
   name: string;
   rollNumber: string;
+  admissionNumber?: string;
 }
 
 interface Attendance {
@@ -25,6 +26,10 @@ interface Attendance {
 const EditAttendance: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [attendances, setAttendances] = useState<Attendance[]>([]);
+  const [allAttendances, setAllAttendances] = useState<any[]>([]);
+  const [availableSessions, setAvailableSessions] = useState<number[]>([1]);
+  const [selectedSession, setSelectedSession] = useState<number>(1);
+
   const { subjectId } = useParams<{ subjectId: string }>();
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,6 +41,23 @@ const EditAttendance: React.FC = () => {
     fetchData();
   }, [selectedDate, subjectId]);
 
+  useEffect(() => {
+    if (allAttendances.length > 0) {
+      filterBySession(allAttendances, selectedSession);
+    }
+  }, [selectedSession, allAttendances]);
+
+  const filterBySession = (data: any[], sessionToFilter: number) => {
+    const sessionData = data.filter((a: any) => (a.session || 1) === sessionToFilter);
+    const sorted = [...sessionData].sort((a: any, b: any) => {
+      const rollA = Number(a.student?.rollNumber) || 0;
+      const rollB = Number(b.student?.rollNumber) || 0;
+      if (rollA !== rollB) return rollA - rollB;
+      return (a.student?.name || "").localeCompare(b.student?.name || "");
+    });
+    setAttendances(sorted);
+  };
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -46,14 +68,17 @@ const EditAttendance: React.FC = () => {
       );
 
       if (response.data.length > 0) {
-        const sorted = [...response.data].sort((a: any, b: any) => {
-          const rollA = Number(a.student?.rollNumber) || 0;
-          const rollB = Number(b.student?.rollNumber) || 0;
-          if (rollA !== rollB) return rollA - rollB;
-          return (a.student?.name || "").localeCompare(b.student?.name || "");
-        });
-        setAttendances(sorted);
+        setAllAttendances(response.data);
+        const sessions = Array.from(new Set(response.data.map((a: any) => a.session || 1))) as number[];
+        sessions.sort((a, b) => a - b);
+        setAvailableSessions(sessions);
+        if (!sessions.includes(selectedSession)) {
+          setSelectedSession(sessions[0]);
+        }
       } else {
+        setAllAttendances([]);
+        setAvailableSessions([1]);
+        setSelectedSession(1);
         getSubject();
       }
       setLoading(false);
@@ -143,7 +168,11 @@ const EditAttendance: React.FC = () => {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      await Axios.post("/attendance", attendances);
+      const payload = attendances.map((a) => ({
+        ...a,
+        session: selectedSession,
+      }));
+      await Axios.post("/attendance", payload);
       setIsSubmitting(false);
       toast.success("Edited Successfully");
       navigate("/");
@@ -162,7 +191,7 @@ const EditAttendance: React.FC = () => {
       </div>
     ) : (
       <div className="space-y-6">
-        {/* Date Picker */}
+        {/* Date Picker and Session Selector */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 bg-white p-4 rounded-xl shadow-sm">
           <label htmlFor="date" className="text-sm font-medium text-gray-700">
             Select Date:
@@ -174,6 +203,26 @@ const EditAttendance: React.FC = () => {
             className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             dateFormat="MMMM d, yyyy"
           />
+
+          {availableSessions.length > 1 && (
+            <>
+              <label htmlFor="session" className="text-sm font-medium text-gray-700 ml-4">
+                Session:
+              </label>
+              <select
+                id="session"
+                value={selectedSession}
+                onChange={(e) => setSelectedSession(Number(e.target.value))}
+                className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              >
+                {availableSessions.map((session) => (
+                  <option key={session} value={session}>
+                    Session {session}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
         </div>
   
         {/* Attendance Cards */}
@@ -192,29 +241,29 @@ const EditAttendance: React.FC = () => {
             return (
               <div
                 key={attendance.student._id}
-                className={`relative p-4 rounded-xl border ${statusConfig.bg} ${statusConfig.border} hover:shadow-md transition-all`}
+                onClick={() =>
+                  handleAttendanceChange(
+                    attendance.student._id,
+                    !attendance.isPresent,
+                    subjectId || ""
+                  )
+                }
+                className={`relative p-4 rounded-xl border ${statusConfig.bg} ${statusConfig.border} hover:shadow-md transition-all cursor-pointer select-none`}
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <input
-                      type="checkbox"
-                      checked={attendance.isPresent}
-                      onChange={(e) =>
-                        handleAttendanceChange(
-                          attendance.student._id,
-                          e.target.checked,
-                          subjectId || ""
-                        )
-                      }
-                      className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                    />
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-gray-900 truncate flex items-center gap-1.5">
-                        <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-white/80 border border-gray-200 text-gray-700 shadow-2xs">
-                          Roll {attendance.student?.rollNumber || "—"}
+                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-[11px] font-bold bg-white/80 border border-gray-200 text-gray-700 shadow-2xs">
+                          {attendance.student?.rollNumber || "—"}
                         </span>
                         <span className="truncate">{attendance.student.name}</span>
                       </p>
+                      {attendance.student.admissionNumber && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Adm: {attendance.student.admissionNumber}
+                        </p>
+                      )}
                     </div>
                   </div>
   

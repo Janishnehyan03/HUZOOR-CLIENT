@@ -1,4 +1,4 @@
-import { ArrowRight, Book, Building2, DownloadCloud, User } from "lucide-react";
+import { ArrowRight, Book, Building2, DownloadCloud, User, Users } from "lucide-react";
 import React from "react";
 import { Link } from "react-router-dom";
 
@@ -24,6 +24,13 @@ const AttendancePage: React.FC = () => {
       icon: <Building2 className="w-5 h-5 text-amber-700" />,
       iconWrap: "bg-amber-100",
       link: "/manage-attendance/departments",
+    },
+    {
+      title: "Teachers List",
+      description: "View availability status of all teachers.",
+      icon: <Users className="w-5 h-5 text-blue-700" />,
+      iconWrap: "bg-blue-100",
+      link: "/teachers-list",
     },
   ];
 
