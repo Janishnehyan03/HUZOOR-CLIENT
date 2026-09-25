@@ -12,6 +12,7 @@ import {
   Sparkles,
   ShieldCheck,
 } from "lucide-react";
+import { useAuth } from "../contexts/userContext";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -31,12 +32,22 @@ const navItems = [
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { pathname } = useLocation();
+  const { user } = useAuth();
   const appName = import.meta.env.VITE_APP_NAME || "Attendance Portal";
 
   const isActive = (path: string) => {
     if (path === "/") return pathname === "/";
     return pathname.startsWith(path);
   };
+
+  const filteredNavItems = navItems.filter(
+    (item) => user?.role === "admin" || item.label === "Dashboard" || item.label === "Teachers"
+  ).map((item) => {
+    if (user?.role !== "admin" && item.label === "Teachers") {
+      return { ...item, label: "Teachers Status" };
+    }
+    return item;
+  });
 
   const content = (
     <div className="h-full flex flex-col justify-between bg-white select-none">
@@ -56,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 {appName}
               </span>
               <span className="text-[10px] uppercase font-semibold text-indigo-600 tracking-wider flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3" /> Admin Portal
+                <ShieldCheck className="w-3 h-3" /> {user?.role === "admin" ? "Admin Portal" : "Faculty Portal"}
               </span>
             </div>
           </Link>
@@ -79,7 +90,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             </p>
           </div>
 
-          {navItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const active = isActive(item.to);
             const Icon = item.icon;
             return (

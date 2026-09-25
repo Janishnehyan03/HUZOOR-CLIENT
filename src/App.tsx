@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Navigate } from "react-router-dom";
 import PrivateRoutes from "./components/ProtectedRoute"; // Assuming PrivateRoutes is in ProtectedRoute.js
 import UserLayout from "./components/UserLayout";
 import EditPeriod from "./components/_home/teacher/EditPeriod";
@@ -47,19 +47,19 @@ function App() {
         <Route path='*' element={<NotFound />} />
         <Route element={<PrivateRoutes />}>
           <Route path="/" element={<Home />} />
-          <Route path="/downloads" element={<Downloads />} />
-          <Route path="/manage-classes" element={<ManageClasses />} />
+          <Route path="/downloads" element={user?.role === "admin" ? <Downloads /> : <Navigate to="/" replace />} />
+          <Route path="/manage-classes" element={user?.role === "admin" ? <ManageClasses /> : <Navigate to="/" replace />} />
           <Route path="/teachers" element={user?.role === "admin" ? <Teachers /> : <TeachersList />} />
-          <Route path="/teacher/:teacherId" element={<TeacherProfile />} />
-          <Route path="/subjects" element={<Subjects />} />
-          <Route path="/subject/:subjectId" element={<ManageSubject />} />
+          <Route path="/teacher/:teacherId" element={user?.role === "admin" ? <TeacherProfile /> : <Navigate to="/" replace />} />
+          <Route path="/subjects" element={user?.role === "admin" ? <Subjects /> : <Navigate to="/" replace />} />
+          <Route path="/subject/:subjectId" element={user?.role === "admin" ? <ManageSubject /> : <Navigate to="/" replace />} />
           <Route path="/edit-period/:subjectId" element={<EditPeriod />} />
-          <Route path="/students" element={<StudentTable />} />
-          <Route path="/add-student" element={<AddStudent />} />
+          <Route path="/students" element={user?.role === "admin" ? <StudentTable /> : <Navigate to="/" replace />} />
+          <Route path="/add-student" element={user?.role === "admin" ? <AddStudent /> : <Navigate to="/" replace />} />
           <Route path="/attendance/:subjectId" element={<AttendancePage />} />
-          <Route path="/manage-attendance" element={<ManageAttendace />} />
-          <Route path="/minus-attendance" element={<MinusAttendancePage />} />
-          <Route path="/monthly-report" element={<MonthlyReport />} />
+          <Route path="/manage-attendance" element={user?.role === "admin" ? <ManageAttendace /> : <Navigate to="/" replace />} />
+          <Route path="/minus-attendance" element={user?.role === "admin" ? <MinusAttendancePage /> : <Navigate to="/" replace />} />
+          <Route path="/monthly-report" element={user?.role === "admin" ? <MonthlyReport /> : <Navigate to="/" replace />} />
 
           <Route
             path="/edit-attendance/:subjectId"
@@ -75,26 +75,26 @@ function App() {
           />
           <Route
             path="/manage-attendance/attendance-clearance"
-            element={<AttendanceClearance />}
+            element={user?.role === "admin" ? <AttendanceClearance /> : <Navigate to="/" replace />}
           />
         </Route>
         <Route element={<UserLayout />}>
           <Route path="/student" element={<UserHome />} />
           <Route
             path="/manage-attendance/students"
-            element={<ManageStudentsAttendance />}
+            element={user?.role === "admin" ? <ManageStudentsAttendance /> : <Navigate to="/" replace />}
           />
           <Route
             path="/attendance-details/student/:studentId"
-            element={<StudentDays />}
+            element={user?.role === "admin" ? <StudentDays /> : <Navigate to="/" replace />}
           />
           <Route
             path="/manage-attendance/subjects"
-            element={<ManageSubjectsAttendace />}
+            element={user?.role === "admin" ? <ManageSubjectsAttendace /> : <Navigate to="/" replace />}
           />
           <Route
             path="/manage-attendance/departments"
-            element={<ManageDepartments />}
+            element={user?.role === "admin" ? <ManageDepartments /> : <Navigate to="/" replace />}
           />
           <Route
             path="/settings"
