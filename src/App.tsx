@@ -82,19 +82,19 @@ function App() {
           <Route path="/student" element={<UserHome />} />
           <Route
             path="/manage-attendance/students"
-            element={user?.role === "admin" ? <ManageStudentsAttendance /> : <Navigate to="/" replace />}
+            element={<ManageStudentsAttendance />}
           />
           <Route
             path="/attendance-details/student/:studentId"
-            element={user?.role === "admin" ? <StudentDays /> : <Navigate to="/" replace />}
+            element={<StudentDays />}
           />
           <Route
             path="/manage-attendance/subjects"
-            element={user?.role === "admin" ? <ManageSubjectsAttendace /> : <Navigate to="/" replace />}
+            element={<ManageSubjectsAttendace />}
           />
           <Route
             path="/manage-attendance/departments"
-            element={user?.role === "admin" ? <ManageDepartments /> : <Navigate to="/" replace />}
+            element={<ManageDepartments />}
           />
           <Route
             path="/settings"
