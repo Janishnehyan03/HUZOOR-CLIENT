@@ -1,9 +1,13 @@
 import dayjs from "dayjs";
-import { CalendarDays, Clock3, Edit2Icon, Users, CheckCircle2, BookOpen } from "lucide-react";
+import { CalendarDays, Clock3, Edit2Icon, Users, CheckCircle2, BookOpen, Download, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Axios from "../../../Axios";
 import { useAuth } from "../../../contexts/userContext";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import * as XLSX from "xlsx";
+import toast from "react-hot-toast";
 
 function TeacherCards() {
   const currentDay = dayjs().format("dddd");
@@ -12,10 +16,19 @@ function TeacherCards() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [isDownloading, setIsDownloading] = useState(false);
+
   const getMyPeriods = async () => {
     try {
       const { data } = await Axios.get("/subject/get/periods");
       setSubjects(data.subjects || []);
+      if (data.subjects && data.subjects.length > 0) {
+        setSelectedSubjectId(data.subjects[0]._id);
+      }
     } catch (error: any) {
       console.log(error.response);
     }
@@ -40,9 +53,57 @@ function TeacherCards() {
     }
   }, []);
 
+  const handleDownloadReport = async () => {
+    if (!selectedSubjectId) {
+      toast.error("Please select a subject");
+      return;
+    }
+    setIsDownloading(true);
+    try {
+      const formattedDate = selectedDate.toISOString().split("T")[0];
+      const response = await Axios.get(`/attendance/subject/${selectedSubjectId}/date/${formattedDate}`);
+      
+      const allAttendances = response.data || [];
+      const absentees = allAttendances.filter((a: any) => !a.isPresent);
+
+      if (absentees.length === 0) {
+        toast.error("No absentees found for this date and subject.");
+        setIsDownloading(false);
+        return;
+      }
+
+      const selectedSubject = subjects.find(s => s._id === selectedSubjectId);
+      const subjectName = selectedSubject ? selectedSubject.name : "Subject";
+
+      const exportData = absentees.map((a: any) => ({
+        "Session": a.session || 1,
+        "Roll No.": a.student?.rollNumber || "-",
+        "Student Name": a.student?.name || "-",
+        "Admission No.": a.student?.admissionNumber || "-",
+        "Status": a.reason === "medical" ? "Medical" : a.reason === "official" ? "On Duty" : a.reason ? "Leave" : "Absent",
+        "Reason": a.reason || "-",
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      ws["!cols"] = [{ wch: 10 }, { wch: 10 }, { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 25 }];
+      
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Absentees");
+      
+      XLSX.writeFile(wb, `absent_report_${subjectName.replace(/\s+/g, "_")}_${formattedDate}.xlsx`);
+      toast.success("Report downloaded successfully");
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch report data");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <section className="mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen bg-slate-50/60">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto relative">
         {/* Welcome Banner */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-700 via-indigo-800 to-purple-900 p-6 sm:p-10 shadow-xl border border-indigo-600/30 mb-8">
           <div className="absolute -right-12 -top-12 h-56 w-56 rounded-full bg-white/10 blur-2xl pointer-events-none" />
@@ -66,6 +127,22 @@ function TeacherCards() {
               {subjects.length} Assigned {subjects.length === 1 ? "Subject" : "Subjects"}
             </div>
           </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mb-8 flex flex-wrap gap-4">
+          <Link
+            to="/minus-attendance"
+            className="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm py-3 px-6 rounded-xl shadow-xs hover:shadow-md transition-all duration-200"
+          >
+            Manage Minus Attendance
+          </Link>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 font-bold text-sm py-3 px-6 rounded-xl shadow-xs hover:shadow-md transition-all duration-200"
+          >
+            <Download className="w-4 h-4" /> Download Absent Report
+          </button>
         </div>
 
         {/* Subjects Grid */}
@@ -186,6 +263,76 @@ function TeacherCards() {
           </div>
         )}
       </div>
+
+      {/* Download Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-slate-50/50">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <Download className="w-5 h-5 text-indigo-600" />
+                Download Absent Report
+              </h3>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-1.5 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Select Class</label>
+                <select
+                  value={selectedSubjectId}
+                  onChange={(e) => setSelectedSubjectId(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 bg-white"
+                >
+                  {Array.from(new Map(subjects.filter(s => s.class).map(s => [s.class._id, s])).values()).map((s: any) => (
+                    <option key={s._id} value={s._id}>
+                      {s.class.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Select Date</label>
+                <DatePicker
+                  selected={selectedDate}
+                  onChange={(date: Date) => setSelectedDate(date)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 bg-white"
+                  dateFormat="MMMM d, yyyy"
+                  maxDate={new Date()}
+                />
+              </div>
+            </div>
+
+            <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDownloadReport}
+                disabled={isDownloading || subjects.length === 0}
+                className="px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2 shadow-sm"
+              >
+                {isDownloading ? (
+                  "Downloading..."
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" /> Download Report
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

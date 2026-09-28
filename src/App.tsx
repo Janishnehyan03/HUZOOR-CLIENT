@@ -58,7 +58,7 @@ function App() {
           <Route path="/add-student" element={user?.role === "admin" ? <AddStudent /> : <Navigate to="/" replace />} />
           <Route path="/attendance/:subjectId" element={<AttendancePage />} />
           <Route path="/manage-attendance" element={user?.role === "admin" ? <ManageAttendace /> : <Navigate to="/" replace />} />
-          <Route path="/minus-attendance" element={user?.role === "admin" ? <MinusAttendancePage /> : <Navigate to="/" replace />} />
+          <Route path="/minus-attendance" element={(user?.role === "admin" || user?.role === "teacher" || user?.role === "class-teacher") ? <MinusAttendancePage /> : <Navigate to="/" replace />} />
           <Route path="/monthly-report" element={user?.role === "admin" ? <MonthlyReport /> : <Navigate to="/" replace />} />
 
           <Route

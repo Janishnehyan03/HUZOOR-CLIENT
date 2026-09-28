@@ -14,6 +14,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import dayjs from "dayjs";
+import { useAuth } from "../../contexts/userContext";
 import * as XLSX from "xlsx";
 import {
   authorizeMinusAttendanceDelete,
@@ -35,28 +36,97 @@ interface MinusRecord {
   createdAt: string;
 }
 
-interface EntryRow {
-  id: number;
-  admissionNumber: string;
-  studentName: string;
-  studentId: string;
-  count: number | string;
-  reason: string;
-  status: "idle" | "loading" | "found" | "notfound";
-}
 
 const TABS = ["Add Records", "Manage Records"] as const;
 type Tab = (typeof TABS)[number];
 
 const MinusAttendancePage: React.FC = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("Add Records");
 
-  // ── Add Records state ──────────────────────────────────────────────
-  const nextId = useRef(1);
-  const [rows, setRows] = useState<EntryRow[]>([
-    { id: nextId.current++, admissionNumber: "", studentName: "", studentId: "", count: "", reason: "", status: "idle" },
-  ]);
+  const [allStudents, setAllStudents] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStudents, setSelectedStudents] = useState<any[]>([]);
+  const [batchCount, setBatchCount] = useState<number | "">("");
+  const [batchReason, setBatchReason] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  const downloadTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ["admissionNumber", "count", "reason"],
+      ["A001", 3, "disciplinary"],
+      ["A002", 2, "administrative"],
+    ]);
+    ws["!cols"] = [{ wch: 20 }, { wch: 10 }, { wch: 25 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Minus Attendance");
+    XLSX.writeFile(wb, "minus_attendance_template.xlsx");
+  };
+
+  useEffect(() => {
+    if (activeTab === "Add Records" && allStudents.length === 0) {
+      Axios.get("/student?limit=10000").then(res => setAllStudents(res.data.students || []));
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleBatchSubmit = async () => {
+    if (selectedStudents.length === 0) {
+      toast.error("Please select at least one student");
+      return;
+    }
+    if (!batchCount || Number(batchCount) < 1) {
+      toast.error("Please enter a valid count (≥ 1)");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { data } = await Axios.post("/minus-attendance/batch", {
+        records: selectedStudents.map((s) => ({
+          admissionNumber: s.admissionNumber,
+          count: Number(batchCount),
+          reason: batchReason,
+        })),
+      });
+
+      if (data.created > 0) {
+        toast.success(`Saved ${data.created} record${data.created > 1 ? "s" : ""}`);
+      }
+      if (data.errors > 0) {
+        toast.error(`${data.errors} record${data.errors > 1 ? "s" : ""} failed`);
+      }
+
+      // Reset
+      setSelectedStudents([]);
+      setBatchCount("");
+      setBatchReason("");
+      setSearchQuery("");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Submission failed");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const filteredStudents = allStudents
+    .filter(s => 
+      !selectedStudents.find(selected => selected._id === s._id) &&
+      (s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+       s.admissionNumber.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
+    .slice(0, 30); // show top 30 matches
 
   // ── Manage Records state ───────────────────────────────────────────
   const [records, setRecords] = useState<MinusRecord[]>([]);
@@ -158,90 +228,6 @@ const MinusAttendancePage: React.FC = () => {
     }
   };
 
-  // ── Entry row helpers ──────────────────────────────────────────────
-  const addRow = () => {
-    setRows((prev) => [
-      ...prev,
-      { id: nextId.current++, admissionNumber: "", studentName: "", studentId: "", count: "", reason: "", status: "idle" },
-    ]);
-  };
-
-  const removeRow = (id: number) => {
-    setRows((prev) => prev.filter((r) => r.id !== id));
-  };
-
-  const updateRow = (id: number, field: Partial<EntryRow>) => {
-    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...field } : r)));
-  };
-
-  const lookupStudent = async (rowId: number, admissionNumber: string) => {
-    const trimmed = admissionNumber.trim();
-    if (!trimmed) return;
-    updateRow(rowId, { status: "loading", studentName: "", studentId: "" });
-    try {
-      const { data } = await Axios.get(`/student?admissionNumber=${encodeURIComponent(trimmed)}`);
-      const student = data.students?.[0];
-      if (student) {
-        updateRow(rowId, { status: "found", studentName: student.name, studentId: student._id });
-      } else {
-        updateRow(rowId, { status: "notfound", studentName: "", studentId: "" });
-      }
-    } catch {
-      updateRow(rowId, { status: "notfound", studentName: "", studentId: "" });
-    }
-  };
-
-  const handleAdmissionBlur = (rowId: number, value: string) => {
-    lookupStudent(rowId, value);
-  };
-
-  const handleSubmitAll = async () => {
-    const validRows = rows.filter((r) => r.status === "found" && Number(r.count) >= 1);
-    if (validRows.length === 0) {
-      toast.error("No valid rows to submit. Make sure admission numbers are resolved and counts are ≥ 1.");
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const { data } = await Axios.post("/minus-attendance/batch", {
-        records: validRows.map((r) => ({
-          admissionNumber: r.admissionNumber.trim(),
-          count: Number(r.count),
-          reason: r.reason,
-        })),
-      });
-
-      if (data.created > 0) {
-        toast.success(`Saved ${data.created} record${data.created > 1 ? "s" : ""}`);
-      }
-      if (data.errors > 0) {
-        toast.error(`${data.errors} record${data.errors > 1 ? "s" : ""} failed`);
-      }
-
-      // Reset rows
-      nextId.current = 1;
-      setRows([{ id: nextId.current++, admissionNumber: "", studentName: "", studentId: "", count: "", reason: "", status: "idle" }]);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Submission failed");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // ── Excel template download ────────────────────────────────────────
-  const downloadTemplate = () => {
-    const ws = XLSX.utils.aoa_to_sheet([
-      ["admissionNumber", "count", "reason"],
-      ["A001", 3, "disciplinary"],
-      ["A002", 2, "administrative"],
-    ]);
-    ws["!cols"] = [{ wch: 20 }, { wch: 10 }, { wch: 25 }];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Minus Attendance");
-    XLSX.writeFile(wb, "minus_attendance_template.xlsx");
-  };
-
   // ── Manage records helpers ─────────────────────────────────────────
   const filteredRecords = records
     .filter((r) => {
@@ -288,8 +274,6 @@ const MinusAttendancePage: React.FC = () => {
     }
   };
 
-  const validRowCount = rows.filter((r) => r.status === "found" && Number(r.count) >= 1).length;
-
   return (
     <div className="min-h-screen bg-slate-50 px-4 sm:px-6 lg:px-8 py-8">
       <div className="max-w-5xl mx-auto space-y-6">
@@ -329,12 +313,12 @@ const MinusAttendancePage: React.FC = () => {
 
         {/* ── Tab: Add Records ───────────────────────────────────────── */}
         {activeTab === "Add Records" && (
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">Add by Admission Number</h2>
+                <h2 className="text-lg font-semibold text-slate-900">Add Minus Attendance</h2>
                 <p className="text-sm text-slate-500 mt-0.5">
-                  Enter admission numbers — names are fetched automatically.
+                  Search and select single or multiple students to apply deductions.
                 </p>
               </div>
               <button
@@ -342,112 +326,129 @@ const MinusAttendancePage: React.FC = () => {
                 className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-slate-700 text-sm font-medium hover:bg-slate-50 transition"
               >
                 <Download className="w-4 h-4" />
-                Download Template
+                Excel Template
               </button>
             </div>
 
-            {/* Entry table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200">
-                    <th className="text-left pb-2 pr-3 font-medium text-slate-600 w-40">Admission No.</th>
-                    <th className="text-left pb-2 pr-3 font-medium text-slate-600 min-w-[160px]">Student Name</th>
-                    <th className="text-left pb-2 pr-3 font-medium text-slate-600 w-24">Count</th>
-                    <th className="text-left pb-2 pr-3 font-medium text-slate-600 min-w-[160px]">Reason (optional)</th>
-                    <th className="pb-2 w-8"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {rows.map((row) => (
-                    <tr key={row.id}>
-                      <td className="py-2 pr-3">
-                        <input
-                          type="text"
-                          value={row.admissionNumber}
-                          onChange={(e) => updateRow(row.id, { admissionNumber: e.target.value, status: "idle", studentName: "", studentId: "" })}
-                          onBlur={(e) => handleAdmissionBlur(row.id, e.target.value)}
-                          placeholder="e.g. A001"
-                          className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-200"
-                        />
-                      </td>
-                      <td className="py-2 pr-3">
-                        <div className="flex items-center gap-2 min-h-[34px]">
-                          {row.status === "loading" && (
-                            <span className="text-slate-400 text-xs">Fetching…</span>
-                          )}
-                          {row.status === "found" && (
-                            <>
-                              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                              <span className="text-slate-800 font-medium">{row.studentName}</span>
-                            </>
-                          )}
-                          {row.status === "notfound" && (
-                            <>
-                              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
-                              <span className="text-rose-600 text-xs">Not found</span>
-                            </>
-                          )}
-                          {row.status === "idle" && !row.admissionNumber && (
-                            <span className="text-slate-400 text-xs">—</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-2 pr-3">
-                        <input
-                          type="number"
-                          min={1}
-                          value={row.count}
-                          onChange={(e) => updateRow(row.id, { count: e.target.value })}
-                          placeholder="0"
-                          className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-rose-200"
-                        />
-                      </td>
-                      <td className="py-2 pr-3">
-                        <input
-                          type="text"
-                          value={row.reason}
-                          onChange={(e) => updateRow(row.id, { reason: e.target.value })}
-                          placeholder="optional"
-                          className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-200"
-                        />
-                      </td>
-                      <td className="py-2">
+            <div className="space-y-5">
+              {/* Form Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Minus Count <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={batchCount}
+                    onChange={(e) => setBatchCount(e.target.value ? Number(e.target.value) : "")}
+                    placeholder="Enter deduction count (e.g. 1)"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Reason <span className="text-slate-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={batchReason}
+                    onChange={(e) => setBatchReason(e.target.value)}
+                    placeholder="Enter reason for deduction"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 bg-white"
+                  />
+                </div>
+              </div>
+
+              {/* Search & Select */}
+              <div className="relative" ref={searchRef}>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Search Students
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setIsDropdownOpen(true);
+                    }}
+                    onFocus={() => setIsDropdownOpen(true)}
+                    placeholder="Type name or admission number..."
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 bg-slate-50"
+                  />
+                </div>
+                
+                {isDropdownOpen && searchQuery.trim().length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-lg border border-slate-200 max-h-60 overflow-y-auto">
+                    {filteredStudents.length > 0 ? (
+                      filteredStudents.map(student => (
                         <button
-                          onClick={() => removeRow(row.id)}
-                          disabled={rows.length === 1}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                          key={student._id}
+                          onClick={() => {
+                            setSelectedStudents([...selectedStudents, student]);
+                            setSearchQuery("");
+                            setIsDropdownOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-2 hover:bg-rose-50 flex items-center justify-between group transition-colors"
                         >
-                          <X className="w-4 h-4" />
+                          <div>
+                            <p className="text-sm font-medium text-slate-900 group-hover:text-rose-700">{student.name}</p>
+                            <p className="text-xs text-slate-500">{student.admissionNumber} {student.class?.name ? `· ${student.class.name}` : ""}</p>
+                          </div>
+                          <Plus className="w-4 h-4 text-slate-300 group-hover:text-rose-600" />
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      ))
+                    ) : (
+                      <div className="px-4 py-3 text-sm text-slate-500">No students found.</div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Selected Students Badges */}
+              {selectedStudents.length > 0 && (
+                <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Selected Students ({selectedStudents.length})
+                    </span>
+                    <button 
+                      onClick={() => setSelectedStudents([])}
+                      className="text-xs font-medium text-slate-500 hover:text-rose-600"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                    {selectedStudents.map(student => (
+                      <span key={student._id} className="inline-flex items-center gap-1.5 bg-white border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-sm shadow-sm">
+                        <span className="font-medium">{student.name}</span>
+                        <span className="text-slate-400 text-xs">({student.admissionNumber})</span>
+                        <button
+                          onClick={() => setSelectedStudents(selectedStudents.filter(s => s._id !== student._id))}
+                          className="ml-1 text-slate-400 hover:text-rose-600 focus:outline-none"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  onClick={handleBatchSubmit}
+                  disabled={submitting || selectedStudents.length === 0 || !batchCount}
+                  className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-6 py-2.5 text-white text-sm font-semibold hover:bg-rose-700 transition disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+                >
+                  <Save className="w-4 h-4" />
+                  {submitting ? "Saving..." : `Submit for ${selectedStudents.length} Student${selectedStudents.length !== 1 ? 's' : ''}`}
+                </button>
+              </div>
             </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-              <button
-                onClick={addRow}
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
-              >
-                <Plus className="w-4 h-4" /> Add Row
-              </button>
-
-              <button
-                onClick={handleSubmitAll}
-                disabled={submitting || validRowCount === 0}
-                className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-5 py-2 text-white text-sm font-medium hover:bg-rose-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <Save className="w-4 h-4" />
-                {submitting ? "Saving…" : `Submit ${validRowCount > 0 ? `(${validRowCount})` : ""}`}
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-400">
-              Tip: Tab out of an admission number field to auto-fetch the student name. Only rows with a resolved name and count ≥ 1 will be submitted.
-            </p>
           </section>
         )}
 
@@ -577,61 +578,63 @@ const MinusAttendancePage: React.FC = () => {
             )}
 
             {/* Complete Delete Danger Card */}
-            <div className="rounded-2xl border border-rose-200 bg-white p-5 sm:p-6 shadow-sm mt-6">
-              <h2 className="text-lg font-semibold text-slate-900 mb-2">
-                Complete Minus Records Delete
-              </h2>
-              <p className="text-sm text-slate-500 mb-4">
-                Deletes all minus attendance records. Password verification is required.
-              </p>
-
-              <div className="space-y-4 rounded-xl border border-rose-200 bg-rose-50/40 p-4">
-                <p className="text-sm text-rose-700 font-medium">
-                  High-risk action: this permanently deletes all minus attendance records.
+            {user?.role === "admin" && (
+              <div className="rounded-2xl border border-rose-200 bg-white p-5 sm:p-6 shadow-sm mt-6">
+                <h2 className="text-lg font-semibold text-slate-900 mb-2">
+                  Complete Minus Records Delete
+                </h2>
+                <p className="text-sm text-slate-500 mb-4">
+                  Deletes all minus attendance records. Password verification is required.
                 </p>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Account Password
-                  </label>
-                  <input
-                    type="password"
-                    value={adminPassword}
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                    placeholder="Enter your account password"
-                    className="block w-full py-2.5 px-3 border border-slate-300 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 text-sm"
-                  />
-                  <p className="mt-1 text-xs text-slate-500">
-                    Enter the current password of the logged-in admin account.
+                <div className="space-y-4 rounded-xl border border-rose-200 bg-rose-50/40 p-4">
+                  <p className="text-sm text-rose-700 font-medium">
+                    High-risk action: this permanently deletes all minus attendance records.
                   </p>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Account Password
+                    </label>
+                    <input
+                      type="password"
+                      value={adminPassword}
+                      onChange={(e) => setAdminPassword(e.target.value)}
+                      placeholder="Enter your account password"
+                      className="block w-full py-2.5 px-3 border border-slate-300 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 text-sm"
+                    />
+                    <p className="mt-1 text-xs text-slate-500">
+                      Enter the current password of the logged-in admin account.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Type confirmation: DELETE ALL
+                    </label>
+                    <input
+                      type="text"
+                      value={deleteConfirmText}
+                      onChange={(e) => setDeleteConfirmText(e.target.value)}
+                      placeholder="DELETE ALL"
+                      className="block w-full py-2.5 px-3 border border-slate-300 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 text-sm"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Type confirmation: DELETE ALL
-                  </label>
-                  <input
-                    type="text"
-                    value={deleteConfirmText}
-                    onChange={(e) => setDeleteConfirmText(e.target.value)}
-                    placeholder="DELETE ALL"
-                    className="block w-full py-2.5 px-3 border border-slate-300 bg-white rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 text-sm"
-                  />
+                <div className="mt-5 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleCompleteMinusDelete}
+                    disabled={deleteSubmitting}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-white text-sm font-semibold hover:bg-rose-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    {deleteSubmitting ? "Deleting..." : "Delete All Minus Records"}
+                  </button>
                 </div>
               </div>
-
-              <div className="mt-5 flex justify-end">
-                <button
-                  type="button"
-                  onClick={handleCompleteMinusDelete}
-                  disabled={deleteSubmitting}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-white text-sm font-semibold hover:bg-rose-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  {deleteSubmitting ? "Deleting..." : "Delete All Minus Records"}
-                </button>
-              </div>
-            </div>
+            )}
           </section>
         )}
       </div>

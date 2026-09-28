@@ -270,9 +270,14 @@ const StudentDays = () => {
                 <span className="inline-flex items-center gap-1 bg-rose-200 text-rose-800 rounded-full px-3 py-0.5 text-xs font-bold">
                   <Minus className="w-3 h-3" /> {record.count}
                 </span>
-                {record.reason && (
-                  <span className="text-sm text-slate-600 italic">"{record.reason}"</span>
-                )}
+                <div className="flex flex-col">
+                  {record.reason && (
+                    <span className="text-sm text-slate-600 italic">"{record.reason}"</span>
+                  )}
+                  {record.recordedBy?.name && (
+                    <span className="text-xs text-slate-500 mt-0.5">By: {record.recordedBy.name}</span>
+                  )}
+                </div>
                 <span className="text-xs text-slate-400">
                   {dayjs(record.createdAt).format("MMM D, YYYY")}
                 </span>

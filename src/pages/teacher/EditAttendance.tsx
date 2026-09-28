@@ -5,7 +5,8 @@ import Axios from "../../Axios";
 import { useNavigate, useParams } from "react-router-dom";
 import Loading from "../../components/Loading";
 import toast from "react-hot-toast";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 
 interface Student {
   _id: string;
@@ -183,6 +184,32 @@ const EditAttendance: React.FC = () => {
     }
   };
 
+  const downloadAbsentReport = () => {
+    const absentees = attendances.filter((a) => !a.isPresent);
+    
+    if (absentees.length === 0) {
+      toast.error("No absentees to download for this session");
+      return;
+    }
+
+    const exportData = absentees.map((a) => ({
+      "Roll No.": a.student.rollNumber || "-",
+      "Student Name": a.student.name,
+      "Admission No.": a.student.admissionNumber || "-",
+      "Status": a.reason === "medical" ? "Medical" : a.reason === "official" ? "On Duty" : a.reason ? "Leave" : "Absent",
+      "Reason": a.reason || "-",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    ws["!cols"] = [{ wch: 10 }, { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 25 }];
+    
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Absentees");
+    
+    const formattedDate = selectedDate.toISOString().split("T")[0];
+    XLSX.writeFile(wb, `absent_report_${formattedDate}_session${selectedSession}.xlsx`);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
     {loading ? (
@@ -192,37 +219,45 @@ const EditAttendance: React.FC = () => {
     ) : (
       <div className="space-y-6">
         {/* Date Picker and Session Selector */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 bg-white p-4 rounded-xl shadow-sm">
-          <label htmlFor="date" className="text-sm font-medium text-gray-700">
-            Select Date:
-          </label>
-          <DatePicker
-            id="date"
-            selected={selectedDate}
-            onChange={(date: Date) => setSelectedDate(date)}
-            className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-            dateFormat="MMMM d, yyyy"
-          />
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-xl shadow-sm">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <label htmlFor="date" className="text-sm font-medium text-gray-700">
+              Select Date:
+            </label>
+            <DatePicker
+              id="date"
+              selected={selectedDate}
+              onChange={(date: Date) => setSelectedDate(date)}
+              className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              dateFormat="MMMM d, yyyy"
+            />
 
-          {availableSessions.length > 1 && (
-            <>
-              <label htmlFor="session" className="text-sm font-medium text-gray-700 ml-4">
-                Session:
-              </label>
-              <select
-                id="session"
-                value={selectedSession}
-                onChange={(e) => setSelectedSession(Number(e.target.value))}
-                className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-              >
-                {availableSessions.map((session) => (
-                  <option key={session} value={session}>
-                    Session {session}
-                  </option>
-                ))}
-              </select>
-            </>
-          )}
+            {availableSessions.length > 1 && (
+              <>
+                <label htmlFor="session" className="text-sm font-medium text-gray-700 ml-4">
+                  Session:
+                </label>
+                <select
+                  id="session"
+                  value={selectedSession}
+                  onChange={(e) => setSelectedSession(Number(e.target.value))}
+                  className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                >
+                  {availableSessions.map((session) => (
+                    <option key={session} value={session}>
+                      Session {session}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
+          </div>
+          <button 
+            onClick={downloadAbsentReport} 
+            className="inline-flex items-center justify-center gap-2 bg-rose-50 text-rose-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-rose-100 transition whitespace-nowrap"
+          >
+            <Download className="w-4 h-4" /> Download Absent Report
+          </button>
         </div>
   
         {/* Attendance Cards */}
