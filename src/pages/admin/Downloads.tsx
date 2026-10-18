@@ -40,12 +40,31 @@ const Downloads = () => {
     }
   };
 
+  const handleDownloadMinusTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ["admissionNumber", "count", "reason"],
+      ["A001", 3, "disciplinary"],
+      ["A002", 2, "administrative"],
+    ]);
+    ws["!cols"] = [{ wch: 20 }, { wch: 10 }, { wch: 25 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Minus Attendance");
+    XLSX.writeFile(wb, "minus_attendance_template.xlsx");
+    toast.success("Downloaded Minus Attendance template");
+  };
+
   const files = [
     {
       title: "Live Students by Roll Number",
       description: "Export full live student database ordered by roll number.",
       isLiveExport: true,
       accent: "bg-blue-100 text-blue-700",
+    },
+    {
+      title: "Minus Attendance Template",
+      description: "Sample template for bulk minus attendance deductions Excel upload.",
+      isMinusTemplate: true,
+      accent: "bg-rose-100 text-rose-700",
     },
     {
       title: "Student Template",
@@ -128,6 +147,13 @@ const Downloads = () => {
                   className="w-full inline-flex items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 text-sm font-medium transition cursor-pointer disabled:opacity-50"
                 >
                   {exportingStudents ? "Exporting..." : "Export Live Report"}
+                </button>
+              ) : (file as any).isMinusTemplate ? (
+                <button
+                  onClick={handleDownloadMinusTemplate}
+                  className="w-full inline-flex items-center justify-center rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 text-sm font-medium transition cursor-pointer"
+                >
+                  Download Template
                 </button>
               ) : (
                 <a
