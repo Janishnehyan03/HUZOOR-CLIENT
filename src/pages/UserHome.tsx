@@ -1,8 +1,12 @@
-import { ArrowRight, Book, Building2, DownloadCloud, User, Users } from "lucide-react";
+import { ArrowRight, Book, Building2, DownloadCloud, ExternalLink, User, Users } from "lucide-react";
 import React from "react";
 import { Link } from "react-router-dom";
 
 const AttendancePage: React.FC = () => {
+  const attendanceClearanceUrl =
+    import.meta.env.ATTENDANCE_CLEARANCE_URL ||
+    import.meta.env.VITE_ATTENDANCE_CLEARANCE_URL;
+
   const modules = [
     {
       title: "Students",
@@ -96,18 +100,33 @@ const AttendancePage: React.FC = () => {
                 Attendance Clearance Form
               </h2>
               <p className="text-sm text-slate-600 mt-1">
-                Download the latest form for attendance clearance requests.
+                {attendanceClearanceUrl
+                  ? "Submit attendance clearance requests online or download the latest form."
+                  : "Download the latest form for attendance clearance requests."}
               </p>
             </div>
 
-            <a
-              href="/forms/Absence-Clearance-Form 24-25.pdf"
-              download
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 text-white px-4 py-2.5 text-sm font-medium hover:bg-slate-800 transition"
-            >
-              <DownloadCloud className="w-4 h-4" />
-              Download Form
-            </a>
+            <div className="flex items-center gap-3 flex-wrap">
+              {attendanceClearanceUrl && (
+                <a
+                  href={attendanceClearanceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-slate-900 text-white px-4 py-2.5 text-sm font-medium hover:bg-slate-800 transition"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Fill Clearance Form
+                </a>
+              )}
+              <a
+                href="/forms/Absence-Clearance-Form 24-25.pdf"
+                download
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white text-slate-700 px-4 py-2.5 text-sm font-medium hover:bg-slate-50 transition"
+              >
+                <DownloadCloud className="w-4 h-4" />
+                Download Form
+              </a>
+            </div>
           </div>
         </section>
       </div>
